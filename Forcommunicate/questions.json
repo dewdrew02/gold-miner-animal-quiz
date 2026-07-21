@@ -1,0 +1,127 @@
+[
+  {
+    "question": "Which bird is known for its ability to mimic human speech?",
+    "options": ["Parrot", "Eagle", "Penguin", "Owl"],
+    "answer": "Parrot"
+  },
+  {
+    "question": "What is the largest mammal in the world?",
+    "options": ["Blue Whale", "Elephant", "Giraffe", "Great White Shark"],
+    "answer": "Blue Whale"
+  },
+  {
+    "question": "Which animal has black and white stripes?",
+    "options": ["Zebra", "Tiger", "Panda", "Leopard"],
+    "answer": "Zebra"
+  },
+  {
+    "question": "What animal is known as the 'Ship of the Desert'?",
+    "options": ["Horse", "Camel", "Donkey", "Elephant"],
+    "answer": "Camel"
+  },
+  {
+    "question": "Which land animal can run the fastest?",
+    "options": ["Cheetah", "Lion", "Ostrich", "Horse"],
+    "answer": "Cheetah"
+  },
+  {
+    "question": "What type of animal is a Komodo dragon?",
+    "options": ["Mammal", "Bird", "Lizard", "Amphibian"],
+    "answer": "Lizard"
+  },
+  {
+    "question": "Which animal can sleep standing up?",
+    "options": ["Cow", "Horse", "Dog", "Cat"],
+    "answer": "Horse"
+  },
+  {
+    "question": "How many legs does an octopus have?",
+    "options": ["6", "8", "10", "12"],
+    "answer": "8"
+  },
+  {
+    "question": "Which animal is slow-moving and lives in trees?",
+    "options": ["Sloth", "Squirrel", "Monkey", "Koala"],
+    "answer": "Sloth"
+  },
+  {
+    "question": "What do bees collect from flowers to make honey?",
+    "options": ["Nectar", "Pollen", "Water", "Seeds"],
+    "answer": "Nectar"
+  },
+  {
+    "question": "What is a baby dog called?",
+    "options": ["Kitten", "Puppy", "Cub", "Foal"],
+    "answer": "Puppy"
+  },
+  {
+    "question": "Which animal has a pouch to carry its baby?",
+    "options": ["Kangaroo", "Monkey", "Rabbit", "Panda"],
+    "answer": "Kangaroo"
+  },
+  {
+    "question": "Which bird cannot fly but is an excellent swimmer?",
+    "options": ["Ostrich", "Eagle", "Penguin", "Parrot"],
+    "answer": "Penguin"
+  },
+  {
+    "question": "What is the primary food of giant pandas?",
+    "options": ["Bamboo", "Fish", "Eucalyptus leaves", "Grass"],
+    "answer": "Bamboo"
+  },
+  {
+    "question": "Which insect can glow in the dark?",
+    "options": ["Butterfly", "Firefly", "Bee", "Mosquito"],
+    "answer": "Firefly"
+  },
+  {
+    "question": "Which animal is known for changing its skin color?",
+    "options": ["Chameleon", "Snake", "Frog", "Turtle"],
+    "answer": "Chameleon"
+  },
+  {
+    "question": "What is the only mammal that can truly fly?",
+    "options": ["Bat", "Eagle", "Flying squirrel", "Owl"],
+    "answer": "Bat"
+  },
+  {
+    "question": "Which male animal carries the eggs and gives birth to babies?",
+    "options": ["Seahorse", "Penguin", "Frog", "Fish"],
+    "answer": "Seahorse"
+  },
+  {
+    "question": "What is a group of lions called?",
+    "options": ["Pack", "Herd", "Pride", "Flock"],
+    "answer": "Pride"
+  },
+  {
+    "question": "Which animal is the tallest in the world?",
+    "options": ["Elephant", "Giraffe", "Moose", "Camel"],
+    "answer": "Giraffe"
+  },
+  {
+    "question": "Which animal has no vocal cords and is silent?",
+    "options": ["Giraffe", "Monkey", "Panda", "Koala"],
+    "answer": "Giraffe"
+  },
+  {
+    "question": "How many compartments are in a cow's stomach?",
+    "options": ["1", "2", "3", "4"],
+    "answer": "4"
+  },
+  {
+    "question": "Which animal is known to have three hearts?",
+    "options": ["Octopus", "Shark", "Whale", "Jellyfish"],
+    "answer": "Octopus"
+  },
+  {
+    "question": "What do we call a female sheep?",
+    "options": ["Ram", "Ewe", "Lamb", "Doe"],
+    "answer": "Ewe"
+  },
+  {
+    "question": "Which animal uses echolocation to navigate and hunt?",
+    "options": ["Bat", "Eagle", "Cat", "Owl"],
+    "answer": "Bat"
+  }
+]
