@@ -63,7 +63,6 @@
                 </p>
 
                 <div style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-bottom: 10px;">
-                    <button class="btn-primary" id="openCameraBtnIntro" style="padding: 12px 24px; font-size: 18px; background: linear-gradient(135deg, #4ecdc4, #45b7d1); border-bottom-color: #2b8a9e; color: #003049;">📷 ถ่ายรูปหน้าคนขุด</button>
                     <button class="btn-primary" id="enterGameBtn" style="padding: 14px 44px; font-size: 24px;">เข้าสู่เกม 🚀</button>
                 </div>
             </div>
@@ -112,6 +111,68 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 1.5 Checkpoint Level Selection Screen -->
+        <div class="overlay" id="checkpointOverlay">
+            <div class="glass-panel" style="max-width: 880px; padding: 26px 32px;">
+                <div class="overlay-title" style="font-size: 38px; margin-bottom: 2px;">🎯 เลือกด่านขุดทอง</div>
+                <div class="overlay-subtitle" style="font-size: 16px; margin-bottom: 20px; color: #ffb703;">เลือกด่าน 1 ใน 3 ด่านเพื่อเข้าสู่เกมและเริ่มภารกิจขุดทอง!</div>
+                
+                <!-- 3 Level Selection Cards -->
+                <div class="checkpoint-grid">
+                    
+                    <!-- Level 1 Card -->
+                    <div class="checkpoint-card" id="checkpointCard1" onclick="CheckpointManager.selectLevel(1)">
+                        <div class="checkpoint-badge easy">🟢 ง่าย</div>
+                        <div class="checkpoint-icon">🌾</div>
+                        <div class="checkpoint-title">ด่านที่ 1</div>
+                        <div class="checkpoint-sub">มือใหม่ขุดทอง</div>
+                        <div class="checkpoint-desc">ฝึกฝนขุดทองและตอบคำถามภาษาอังกฤษเกี่ยวกับสัตว์</div>
+                        <div class="checkpoint-info">
+                            <span>เป้าหมาย: <strong style="color:#ffea00">$650</strong></span>
+                            <span>เวลา: <strong>60 วินาที</strong></span>
+                        </div>
+                        <button class="btn-checkpoint">เล่นด่าน 1 🚀</button>
+                    </div>
+                    
+                    <!-- Level 2 Card -->
+                    <div class="checkpoint-card" id="checkpointCard2" onclick="CheckpointManager.selectLevel(2)">
+                        <div class="checkpoint-badge medium">🟡 ปานกลาง</div>
+                        <div class="checkpoint-icon">💎</div>
+                        <div class="checkpoint-title">ด่านที่ 2</div>
+                        <div class="checkpoint-sub">หุบเขาเพชรล้ำค่า</div>
+                        <div class="checkpoint-desc">ขุมทรัพย์หนาแน่นขึ้น เพิ่มเพชรและถุงสมบัติปริศนา</div>
+                        <div class="checkpoint-info">
+                            <span>เป้าหมาย: <strong style="color:#ffea00">$1,500</strong></span>
+                            <span>เวลา: <strong>60 วินาที</strong></span>
+                        </div>
+                        <button class="btn-checkpoint">เล่นด่าน 2 🚀</button>
+                    </div>
+                    
+                    <!-- Level 3 Card -->
+                    <div class="checkpoint-card" id="checkpointCard3" onclick="CheckpointManager.selectLevel(3)">
+                        <div class="checkpoint-badge hard">🔴 ยาก</div>
+                        <div class="checkpoint-icon">🌋</div>
+                        <div class="checkpoint-title">ด่านที่ 3</div>
+                        <div class="checkpoint-sub">ถ้ำลาวามหาขุมทรัพย์</div>
+                        <div class="checkpoint-desc">ด่านสุดท้าทาย! ระวังระเบิด TNT และตัวตุ่นขุดดิน</div>
+                        <div class="checkpoint-info">
+                            <span>เป้าหมาย: <strong style="color:#ffea00">$2,600</strong></span>
+                            <span>เวลา: <strong>60 วินาที</strong></span>
+                        </div>
+                        <button class="btn-checkpoint">เล่นด่าน 3 🚀</button>
+                    </div>
+
+                </div>
+
+                <!-- Notice Message for Locked Levels -->
+                <div id="checkpointNoticeMsg" style="display: none; color: #ff4d4d; font-weight: bold; font-size: 15px; margin-top: 12px; background: rgba(230, 57, 70, 0.15); border: 1px solid #ff4d4d; padding: 6px 16px; border-radius: 20px;"></div>
+
+                <button class="btn-primary" id="checkpointBackBtn" style="margin-top: 18px; padding: 10px 30px; font-size: 16px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">
+                    ⬅️ กลับหน้าหลัก
+                </button>
             </div>
         </div>
 
@@ -221,18 +282,20 @@
         <!-- 7. Cameroll Camera Modal -->
         <div class="overlay" id="camerollModal">
             <div class="glass-panel" style="max-width: 440px; padding: 24px; text-align: center;">
-                <div class="overlay-title" style="font-size: 32px; margin-bottom: 8px;">📷 ถ่ายรูปหน้าคนขุด</div>
-                <p style="font-size: 14px; color: #e2d4c9; margin-bottom: 16px;">จัดใบหน้าให้อยู่ตรงกลางวงกลมเพื่อใช้เป็นตัวละครคนขุดทองในเกม</p>
+                <div class="overlay-title" id="camerollTitle" style="font-size: 32px; margin-bottom: 8px;">📷 ถ่ายรูปหน้าคนขุด</div>
+                <p id="camerollSubTitle" style="font-size: 14px; color: #e2d4c9; margin-bottom: 16px;">จัดใบหน้าให้อยู่ตรงกลางวงกลมเพื่อใช้เป็นตัวละครคนขุดทองในเกม</p>
                 
-                <!-- Live Video Feed inside circle mask -->
+                <!-- Live Video Feed / Captured Preview inside circle mask -->
                 <div style="position: relative; width: 220px; height: 220px; margin: 0 auto 16px auto; border-radius: 50%; border: 4px solid #ffea00; overflow: hidden; background: #111; box-shadow: 0 0 20px rgba(255, 234, 0, 0.4);">
                     <video id="camerollVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <img id="camerollPreviewImg" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Photo Preview">
                     <canvas id="camerollCanvas" style="display: none;"></canvas>
                 </div>
                 
-                <div id="camerollStatusMsg" style="font-size: 13px; color: #ffb703; margin-bottom: 14px; min-height: 20px;"></div>
+                <div id="camerollStatusMsg" style="font-size: 15px; font-weight: bold; color: #ffb703; margin-bottom: 14px; min-height: 22px;"></div>
                 
-                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <!-- Initial Action Controls -->
+                <div id="cameraCaptureControls" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
                     <button class="btn-primary" id="snapPhotoBtn" style="padding: 12px; font-size: 18px; width: 100%;">📸 ถ่ายรูปภาพ (Snap Photo)</button>
                     
                     <label style="background: rgba(255,255,255,0.08); border: 1px dashed #ffb703; border-radius: 12px; padding: 10px; cursor: pointer; color: #ffea00; font-weight: bold; font-size: 14px; display: block; text-align: center;">
@@ -241,6 +304,13 @@
                     </label>
                     
                     <button class="btn-primary" id="closeCameraBtn" style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white; width: 100%;">ปิดหน้าต่าง</button>
+                </div>
+
+                <!-- Confirmation Controls (Hidden initially) -->
+                <div id="cameraConfirmControls" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
+                    <button class="btn-primary" id="confirmPhotoBtn" style="padding: 12px; font-size: 18px; width: 100%; background: linear-gradient(135deg, #4cd964, #249033); border-bottom-color: #1b6c25; color: white;">✅ ชอบรูปนี้ (ใช้รูปนี้เลย)</button>
+                    <button class="btn-primary" id="retakePhotoBtn" style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #ff9f1c, #d46a00); border-bottom-color: #994c00; color: white; width: 100%;">🔄 ถ่ายใหม่ / เลือกใหม่</button>
+                    <button class="btn-primary" id="cancelConfirmBtn" style="padding: 8px; font-size: 14px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222; width: 100%;">ยกเลิก</button>
                 </div>
             </div>
         </div>
@@ -252,6 +322,7 @@
     <script src="audio.js"></script>
     <script src="miner.js"></script>
     <script src="cameroll.js"></script>
+    <script src="checkpoint.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

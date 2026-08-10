@@ -828,18 +828,24 @@ const Game = {
     // --- GAME STATE TRANSITIONS ---
     startGame() {
         AudioSynth.init();
+        this.hideAllOverlays();
+        this.showOverlay('checkpointOverlay');
+    },
+
+    startFromLevel(lvl) {
+        AudioSynth.init();
         
         this.cash = 0;
-        this.level = 1;
-        this.dynamite = 0;
+        this.level = lvl;
+        // Give dynamite if starting from higher checkpoint
+        this.dynamite = (lvl > 1) ? (lvl - 1) * 2 : 0;
+        this.targetScore = this.calculateTargetScore(lvl);
         
         // Reset inventory
         this.resetLevelUpgrades();
         
         // Reset unused questions list for a new game session
         this.unusedQuestions = [...this.questions];
-        
-        this.targetScore = 650;
         
         this.hideAllOverlays();
         this.startLevel();
@@ -890,6 +896,9 @@ const Game = {
         
         if (this.cash >= this.targetScore) {
             // Level cleared!
+            if (typeof CheckpointManager !== 'undefined') {
+                CheckpointManager.unlockLevel(this.level + 1);
+            }
             this.showOverlay('nextLevelOverlay');
             document.getElementById('transitionCash').textContent = this.cash;
             document.getElementById('transitionTarget').textContent = this.targetScore;

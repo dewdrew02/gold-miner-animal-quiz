@@ -1,17 +1,20 @@
 // --- CAMEROLL / WEBCAM PHOTO CAPTURE MODULE ---
 // This module manages taking webcam face photos or uploading custom images
-// to replace the miner character's face in Gold Miner game.
+// to replace the miner character's face in Gold Miner game with a confirmation step.
 
 const Cameroll = {
     stream: null,
     videoEl: null,
     canvasEl: null,
     modalEl: null,
+    previewImgEl: null,
+    pendingDataUrl: null,
 
     init() {
         this.videoEl = document.getElementById('camerollVideo');
         this.canvasEl = document.getElementById('camerollCanvas');
         this.modalEl = document.getElementById('camerollModal');
+        this.previewImgEl = document.getElementById('camerollPreviewImg');
 
         // Restore custom photo from LocalStorage if available
         try {
@@ -49,10 +52,27 @@ const Cameroll = {
         if (fileInput) {
             fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
         }
+
+        // Confirmation control event handlers
+        const confirmBtn = document.getElementById('confirmPhotoBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => this.confirmPhoto());
+        }
+
+        const retakeBtn = document.getElementById('retakePhotoBtn');
+        if (retakeBtn) {
+            retakeBtn.addEventListener('click', () => this.retakePhoto());
+        }
+
+        const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
+        if (cancelConfirmBtn) {
+            cancelConfirmBtn.addEventListener('click', () => this.closeCameraModal());
+        }
     },
 
     async openCameraModal() {
         if (!this.modalEl) return;
+        this.resetUIState();
         this.modalEl.classList.add('active');
 
         const msg = document.getElementById('camerollStatusMsg');
@@ -98,8 +118,7 @@ const Cameroll = {
         ctx.restore();
 
         const dataUrl = this.canvasEl.toDataURL('image/png');
-        this.applyMinerPhoto(dataUrl);
-        this.closeCameraModal();
+        this.showConfirmation(dataUrl);
     },
 
     handleFileUpload(event) {
@@ -108,10 +127,89 @@ const Cameroll = {
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            this.applyMinerPhoto(e.target.result);
-            this.closeCameraModal();
+            this.showConfirmation(e.target.result);
         };
         reader.readAsDataURL(file);
+    },
+
+    showConfirmation(dataUrl) {
+        this.pendingDataUrl = dataUrl;
+
+        // Freeze and show captured photo preview image
+        if (this.previewImgEl) {
+            this.previewImgEl.src = dataUrl;
+            this.previewImgEl.style.display = 'block';
+        }
+        if (this.videoEl) {
+            this.videoEl.style.display = 'none';
+        }
+
+        // Toggle UI buttons
+        const captureControls = document.getElementById('cameraCaptureControls');
+        const confirmControls = document.getElementById('cameraConfirmControls');
+        if (captureControls) captureControls.style.display = 'none';
+        if (confirmControls) confirmControls.style.display = 'flex';
+
+        const msg = document.getElementById('camerollStatusMsg');
+        if (msg) {
+            msg.style.color = '#ffea00';
+            msg.textContent = '✨ คุณชอบรูปนี้ใช่ไหมครับ?';
+        }
+    },
+
+    confirmPhoto() {
+        if (!this.pendingDataUrl) return;
+
+        this.applyMinerPhoto(this.pendingDataUrl);
+
+        const msg = document.getElementById('camerollStatusMsg');
+        if (msg) {
+            msg.style.color = '#4cd964';
+            msg.textContent = '✅ บันทึกรูปตัวละครเรียบร้อย!';
+        }
+
+        setTimeout(() => {
+            this.closeCameraModal();
+        }, 500);
+    },
+
+    retakePhoto() {
+        this.pendingDataUrl = null;
+
+        // Hide preview image and re-enable live video feed
+        if (this.previewImgEl) {
+            this.previewImgEl.style.display = 'none';
+        }
+        if (this.videoEl) {
+            this.videoEl.style.display = 'block';
+        }
+
+        // Toggle UI buttons back to normal
+        const captureControls = document.getElementById('cameraCaptureControls');
+        const confirmControls = document.getElementById('cameraConfirmControls');
+        if (captureControls) captureControls.style.display = 'flex';
+        if (confirmControls) confirmControls.style.display = 'none';
+
+        const msg = document.getElementById('camerollStatusMsg');
+        if (msg) {
+            msg.style.color = '#ffb703';
+            msg.textContent = 'จัดใบหน้าให้อยู่กึ่งกลาง แล้วกด ถ่ายรูปภาพ';
+        }
+    },
+
+    resetUIState() {
+        this.pendingDataUrl = null;
+        if (this.previewImgEl) {
+            this.previewImgEl.style.display = 'none';
+        }
+        if (this.videoEl) {
+            this.videoEl.style.display = 'block';
+        }
+
+        const captureControls = document.getElementById('cameraCaptureControls');
+        const confirmControls = document.getElementById('cameraConfirmControls');
+        if (captureControls) captureControls.style.display = 'flex';
+        if (confirmControls) confirmControls.style.display = 'none';
     },
 
     applyMinerPhoto(dataUrl) {
@@ -142,6 +240,7 @@ const Cameroll = {
         if (this.videoEl) {
             this.videoEl.srcObject = null;
         }
+        this.resetUIState();
         if (this.modalEl) {
             this.modalEl.classList.remove('active');
         }
