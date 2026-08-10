@@ -76,6 +76,16 @@ const CheckpointManager = {
         }
     },
 
+    resetProgress() {
+        this.maxUnlockedLevel = 1;
+        try {
+            localStorage.setItem('goldminer_max_unlocked_level', 1);
+        } catch (e) {
+            console.warn("Could not reset unlocked level in storage", e);
+        }
+        this.updateUI();
+    },
+
     updateUI() {
         this.levels.forEach(item => {
             const card = document.getElementById(`checkpointCard${item.level}`);

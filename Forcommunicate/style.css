@@ -798,4 +798,20 @@ body {
     40%, 60% { transform: translate3d(6px, 0, 0); }
 }
 
+/* Custom Keyboard/Input Label Key styling */
+.key-label {
+    background: linear-gradient(180deg, #444444, #1a1a1a);
+    color: #ffffff;
+    border: 1px solid #111111;
+    border-bottom: 3px solid #000000;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-weight: bold;
+    display: inline-block;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.8);
+    font-family: 'Courier New', Courier, monospace;
+}
+
+
 

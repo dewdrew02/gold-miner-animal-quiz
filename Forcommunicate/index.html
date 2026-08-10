@@ -104,6 +104,7 @@
                         </div>
                         
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
+                            <input type="text" id="playerNameInputStart" placeholder="กรอกชื่อผู้เล่น..." maxlength="12" style="background: rgba(255, 255, 255, 0.1); border: 2px solid #ffea00; border-radius: 12px; color: white; padding: 10px; font-size: 18px; text-align: center; font-family: inherit; outline: none; box-shadow: 0 0 10px rgba(255, 234, 0, 0.15);">
                             <button class="btn-primary" id="openCameraBtnStart" style="padding: 10px 0; width: 100%; font-size: 18px; background: linear-gradient(135deg, #4ecdc4, #45b7d1); border-bottom-color: #2b8a9e; color: #003049;">📷 ถ่ายรูปเปลี่ยนหน้าตัวละคร</button>
                             <button class="btn-primary" id="startBtn" style="padding: 14px 0; width: 100%; font-size: 24px; animation: pulseGlow 1.5s infinite alternate;">
                                 เริ่มเล่นเกม 🚀
@@ -211,7 +212,48 @@
                     เป้าหมายของด่าน: <strong style="color: #e6f7ff;">$<span id="transitionTarget">0</span></strong>
                 </div>
                 
-                <button class="btn-primary" id="goShopBtn">ไปยังร้านค้า 🛒</button>
+                <button class="btn-primary" id="goShopBtn">ขึ้นรถไฟไปด่านถัดไป 🚂</button>
+            </div>
+        </div>
+
+        <!-- 3.5 Mini-Game Intro Overlay -->
+        <div class="overlay" id="minigameIntroOverlay">
+            <div class="glass-panel" style="max-width: 600px; padding: 24px 30px;">
+                <div class="overlay-title" style="color: #ffb703; font-size: 36px; margin-bottom: 8px;">🚂 ขึ้นรถไฟขุดทอง!</div>
+                <div class="overlay-subtitle" style="font-size: 18px; margin-bottom: 20px; color: #ffea00;">เดินทางข้ามด่านด้วยรถไฟเหมืองทองคำ</div>
+                
+                <div class="instructions" style="text-align: left; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 16px 20px; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    <strong style="color: #ffea00; font-size: 17px; display: block; margin-bottom: 10px;">กติกาการเล่น</strong>
+                    <div style="margin-bottom: 12px; display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center;">
+                        <span class="key-label" style="font-size: 12px; padding: 3px 8px;">Space / ⬆️ / แตะจอ</span>
+                        <span><strong>กระโดด</strong> หลบหิน/ระเบิดที่พื้น <strong>หลบหลุมลึก</strong> และเก็บทองลอยสูง</span>
+                        
+                        <span class="key-label" style="font-size: 12px; padding: 3px 8px;">⬇️ / S</span>
+                        <span><strong>หมอบ</strong> หลบเพดานหินอุโมงค์ต่ำ</span>
+                    </div>
+                    <span style="display: block; color: #a2d2ff; font-weight: bold; margin-top: 10px;">⭐ ทองคำที่เก็บได้จะบวกเพิ่มเข้าเงินสะสมไปช้อปปิ้งต่อ!</span>
+                    <span style="display: block; color: #ffafcc; font-weight: bold;">⚠️ ระวัง! ชนอุปสรรคหัก $100 | ตกหลุมหัก $150!</span>
+                </div>
+                
+                <button class="btn-primary" id="startMinigameBtn" style="padding: 12px 40px; font-size: 22px; width: 100%;">ออกเดินทางเลย! 🚀</button>
+            </div>
+        </div>
+
+        <!-- 3.6 Mini-Game Outro Overlay -->
+        <div class="overlay" id="minigameOutroOverlay">
+            <div class="glass-panel" style="max-width: 500px; padding: 26px 32px;">
+                <div class="overlay-title" style="color: #4cd964; font-size: 38px; margin-bottom: 4px;">ถึงที่หมายแล้ว! 🚉</div>
+                <div class="overlay-subtitle" style="margin-bottom: 24px; color: #a8dadc;">สรุปยอดรางวัลการเดินทาง</div>
+                
+                <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; font-size: 18px; color: #e2d4c9; margin-bottom: 28px; line-height: 2.0; text-align: left;">
+                    💰 ทองที่เก็บได้: <strong style="color: #4cd964; float: right;">+$$<span id="minigameGoldEarned">0</span></strong><br>
+                    💥 ชนอุปสรรค: <strong style="color: #ff4d4d; float: right;">-$$<span id="minigameObstaclesPenalty">0</span></strong><br>
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 10px; padding-top: 10px; font-weight: bold;">
+                        💵 เงินสะสมรวมล่าสุด: <strong style="color: #ffea00; float: right; font-size: 22px;">$$<span id="minigameNetCash">0</span></strong>
+                    </div>
+                </div>
+                
+                <button class="btn-primary" id="finishMinigameBtn" style="padding: 12px 40px; font-size: 20px; width: 100%;">ไปยังร้านค้า 🛒</button>
             </div>
         </div>
 
@@ -323,6 +365,7 @@
     <script src="miner.js"></script>
     <script src="cameroll.js"></script>
     <script src="checkpoint.js"></script>
+    <script src="minigame.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

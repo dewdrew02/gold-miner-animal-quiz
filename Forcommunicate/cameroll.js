@@ -162,6 +162,11 @@ const Cameroll = {
 
         this.applyMinerPhoto(this.pendingDataUrl);
 
+        // Reset level progress to level 1 and lock other levels
+        if (typeof CheckpointManager !== 'undefined') {
+            CheckpointManager.resetProgress();
+        }
+
         const msg = document.getElementById('camerollStatusMsg');
         if (msg) {
             msg.style.color = '#4cd964';

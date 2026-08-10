@@ -95,29 +95,29 @@ const Game = {
     loadFallbackQuestions() {
         this.questions = [
             {
-                "question": "Which bird is known for its ability to mimic human speech?",
-                "options": ["Parrot", "Eagle", "Penguin", "Owl"],
-                "answer": "Parrot"
+                "question": "What animal barks? (Woof! Woof!)",
+                "options": ["Dog", "Cat", "Lion", "Fish"],
+                "answer": "Dog"
             },
             {
-                "question": "What is the largest mammal in the world?",
-                "options": ["Blue Whale", "Elephant", "Giraffe", "Great White Shark"],
-                "answer": "Blue Whale"
+                "question": "What animal meows? (Meow! Meow!)",
+                "options": ["Bird", "Cat", "Cow", "Rabbit"],
+                "answer": "Cat"
+            },
+            {
+                "question": "Which animal has a very long neck?",
+                "options": ["Frog", "Giraffe", "Dog", "Panda"],
+                "answer": "Giraffe"
             },
             {
                 "question": "Which animal has black and white stripes?",
-                "options": ["Zebra", "Tiger", "Panda", "Leopard"],
+                "options": ["Zebra", "Lion", "Monkey", "Dog"],
                 "answer": "Zebra"
             },
             {
-                "question": "Which land animal can run the fastest?",
-                "options": ["Cheetah", "Lion", "Ostrich", "Horse"],
-                "answer": "Cheetah"
-            },
-            {
-                "question": "Which animal is the tallest in the world?",
-                "options": ["Elephant", "Giraffe", "Moose", "Camel"],
-                "answer": "Giraffe"
+                "question": "Which animal loves to eat bananas and climb trees?",
+                "options": ["Monkey", "Turtle", "Snake", "Sheep"],
+                "answer": "Monkey"
             }
         ];
         this.unusedQuestions = [...this.questions];
@@ -154,15 +154,40 @@ const Game = {
                     this.togglePause();
                     e.preventDefault();
                 }
+            } else if (this.state === 'MINIGAME') {
+                if (typeof MiniGame !== 'undefined') {
+                    MiniGame.handleInput(e);
+                }
             }
         });
 
-        // Click/Touch on canvas to shoot claw
+        window.addEventListener('keyup', (e) => {
+            if (this.state === 'MINIGAME') {
+                if (typeof MiniGame !== 'undefined') {
+                    MiniGame.handleKeyUp(e);
+                }
+            }
+        });
+
+        // Click/Touch on canvas to shoot claw or jump
         this.canvas.addEventListener('mousedown', (e) => {
             if (this.state === 'PLAYING') {
                 this.shootClaw();
+            } else if (this.state === 'MINIGAME') {
+                if (typeof MiniGame !== 'undefined') {
+                    MiniGame.jump();
+                }
             }
         });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (this.state === 'MINIGAME') {
+                if (typeof MiniGame !== 'undefined') {
+                    MiniGame.jump();
+                }
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         // HTML Buttons linking
         document.getElementById('startBtn').addEventListener('click', () => this.startGame());
@@ -172,7 +197,13 @@ const Game = {
         });
         document.getElementById('resumeBtn').addEventListener('click', () => this.togglePause());
         document.getElementById('pauseRestartBtn').addEventListener('click', () => this.restartGame());
-        document.getElementById('goShopBtn').addEventListener('click', () => this.openShop());
+        document.getElementById('goShopBtn').addEventListener('click', () => {
+            if (this.level === 1 && typeof MiniGame !== 'undefined') {
+                MiniGame.start();
+            } else {
+                this.openShop();
+            }
+        });
         document.getElementById('nextLevelBtn').addEventListener('click', () => this.startNextLevel());
         document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
         document.getElementById('dynamiteBtn').addEventListener('click', (e) => {
@@ -181,6 +212,16 @@ const Game = {
         });
         
         document.getElementById('saveScoreBtn').addEventListener('click', () => this.saveCurrentScore());
+
+        const startInput = document.getElementById('playerNameInputStart');
+        if (startInput) {
+            const savedName = localStorage.getItem('goldminer_player_name');
+            if (savedName) startInput.value = savedName;
+            
+            startInput.addEventListener('input', () => {
+                localStorage.setItem('goldminer_player_name', startInput.value.trim());
+            });
+        }
 
         const homeHandler = (e) => {
             if (e) e.stopPropagation();
@@ -204,6 +245,12 @@ const Game = {
     },
 
     update(timestamp) {
+        if (this.state === 'MINIGAME') {
+            if (typeof MiniGame !== 'undefined') {
+                MiniGame.update(timestamp);
+            }
+            return;
+        }
         if (this.state !== 'PLAYING') return;
 
         // Update items (like gophers running)
@@ -335,6 +382,12 @@ const Game = {
     },
 
     draw(timestamp) {
+        if (this.state === 'MINIGAME') {
+            if (typeof MiniGame !== 'undefined') {
+                MiniGame.draw(this.ctx, timestamp);
+            }
+            return;
+        }
         const ctx = this.ctx;
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
         
@@ -894,24 +947,54 @@ const Game = {
     endLevel() {
         this.state = 'PAUSED';
         
+        // Auto-save statistics of each level (win or lose)
+        this.autoSaveScore();
+        
         if (this.cash >= this.targetScore) {
-            // Level cleared!
-            if (typeof CheckpointManager !== 'undefined') {
-                CheckpointManager.unlockLevel(this.level + 1);
+            if (this.level === 3) {
+                // Game Completed!
+                this.showOverlay('gameOverOverlay');
+                
+                const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
+                if (titleEl) {
+                    titleEl.textContent = 'ยินดีด้วย! คุณผ่านครบทุกด่านแล้ว 🎉';
+                    titleEl.style.color = '#4cd964';
+                }
+                const reasonEl = document.getElementById('gameOverReason');
+                if (reasonEl) {
+                    reasonEl.textContent = 'คุณขุดทองสำเร็จครบทั้ง 3 ด่านเรียบร้อยแล้ว!';
+                }
+                document.getElementById('finalScore').textContent = this.cash;
+                
+                const savedName = localStorage.getItem('goldminer_player_name') || '';
+                document.getElementById('playerNameInput').value = savedName;
+            } else {
+                // Level cleared!
+                if (typeof CheckpointManager !== 'undefined') {
+                    CheckpointManager.unlockLevel(this.level + 1);
+                }
+                this.showOverlay('nextLevelOverlay');
+                document.getElementById('transitionCash').textContent = this.cash;
+                document.getElementById('transitionTarget').textContent = this.targetScore;
             }
-            this.showOverlay('nextLevelOverlay');
-            document.getElementById('transitionCash').textContent = this.cash;
-            document.getElementById('transitionTarget').textContent = this.targetScore;
         } else {
             // Failed to reach goal!
             this.showOverlay('gameOverOverlay');
+            
+            const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
+            if (titleEl) {
+                titleEl.textContent = 'GAME OVER';
+                titleEl.style.color = '#ff3b30';
+            }
             document.getElementById('finalScore').textContent = this.cash;
-            document.getElementById('playerNameInput').value = '';
+            
+            const savedName = localStorage.getItem('goldminer_player_name') || '';
+            document.getElementById('playerNameInput').value = savedName;
             
             // Check if high score
             const minScore = this.highScores.length >= 5 ? this.highScores[this.highScores.length - 1].score : 0;
             const isNewHighScore = this.cash > minScore || this.highScores.length < 5;
-            document.getElementById('gameOverReason').textContent = `You failed to reach the level goal of $${this.targetScore}.`;
+            document.getElementById('gameOverReason').textContent = `คุณทำคะแนนสะสมไม่ถึงเป้าหมายของด่าน ($${this.targetScore})`;
         }
     },
 
@@ -1015,6 +1098,54 @@ const Game = {
 
     saveHighScoresToStorage() {
         localStorage.setItem('goldMiner_highscores', JSON.stringify(this.highScores));
+    },
+
+    autoSaveScore() {
+        let name = localStorage.getItem('goldminer_player_name');
+        if (!name) {
+            const startInput = document.getElementById('playerNameInputStart');
+            if (startInput && startInput.value.trim()) {
+                name = startInput.value.trim();
+                localStorage.setItem('goldminer_player_name', name);
+            }
+        }
+        if (!name) {
+            name = 'คนขุดทอง'; // Default name
+        }
+        
+        let customPhoto = null;
+        if (typeof minerPhoto !== 'undefined' && minerPhoto.src && minerPhoto.src.length > 0) {
+            customPhoto = minerPhoto.src;
+        } else {
+            customPhoto = localStorage.getItem('goldminer_custom_photo');
+        }
+
+        const record = {
+            name: name,
+            score: this.cash,
+            level: this.level,
+            photo: customPhoto || null,
+            date: new Date().toISOString().split('T')[0]
+        };
+        
+        let existingIndex = this.highScores.findIndex(e => e.name === name);
+        if (existingIndex !== -1) {
+            // Update if score is higher
+            if (this.cash > this.highScores[existingIndex].score) {
+                this.highScores[existingIndex].score = this.cash;
+                this.highScores[existingIndex].level = Math.max(this.highScores[existingIndex].level, this.level);
+                this.highScores[existingIndex].photo = customPhoto || this.highScores[existingIndex].photo;
+                this.highScores[existingIndex].date = record.date;
+            }
+        } else {
+            this.highScores.push(record);
+        }
+        
+        this.highScores.sort((a, b) => b.score - a.score);
+        this.highScores = this.highScores.slice(0, 5);
+        
+        this.saveHighScoresToStorage();
+        this.renderMenuHighScores();
     },
 
     saveCurrentScore() {
