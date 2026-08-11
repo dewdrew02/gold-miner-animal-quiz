@@ -252,5 +252,43 @@ const AudioSynth = {
         
         osc.start(now);
         osc.stop(now + 0.45);
+    },
+
+    bgmAudio: null,
+    isMusicPlaying: false,
+    musicVolume: 0.3,
+
+    startMusic() {
+        this.init();
+        if (this.isMusicPlaying) return;
+
+        if (!this.bgmAudio) {
+            this.bgmAudio = new Audio('Background Song.mp3');
+            this.bgmAudio.loop = true;
+        }
+
+        this.bgmAudio.volume = this.musicVolume;
+        
+        this.bgmAudio.play()
+            .then(() => {
+                this.isMusicPlaying = true;
+            })
+            .catch(err => {
+                console.warn("Failed to play background music:", err);
+            });
+    },
+
+    setMusicVolume(vol) {
+        this.musicVolume = vol;
+        if (this.bgmAudio) {
+            this.bgmAudio.volume = vol;
+        }
+    },
+
+    stopMusic() {
+        if (this.bgmAudio) {
+            this.bgmAudio.pause();
+        }
+        this.isMusicPlaying = false;
     }
 };
