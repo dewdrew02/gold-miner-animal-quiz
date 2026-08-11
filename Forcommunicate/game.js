@@ -72,6 +72,9 @@ const Game = {
         document.getElementById('enterGameBtn').addEventListener('click', () => {
             this.hideAllOverlays();
             this.showOverlay('startOverlay');
+            if (typeof AudioSynth !== 'undefined') {
+                AudioSynth.startMusic();
+            }
         });
 
         // Particle update loop runs inside main loop
@@ -212,6 +215,35 @@ const Game = {
         });
         
         document.getElementById('saveScoreBtn').addEventListener('click', () => this.saveCurrentScore());
+
+        // Music Volume Slider handling
+        const musicVolSlider = document.getElementById('musicVolSlider');
+        const musicVolText = document.getElementById('musicVolText');
+        const pauseMusicVolSlider = document.getElementById('pauseMusicVolSlider');
+        const pauseMusicVolText = document.getElementById('pauseMusicVolText');
+
+        const updateMusicVolume = (val) => {
+            const vol = parseFloat(val) / 100;
+            if (typeof AudioSynth !== 'undefined') {
+                AudioSynth.setMusicVolume(vol);
+            }
+            if (musicVolSlider) musicVolSlider.value = val;
+            if (musicVolText) musicVolText.textContent = `${val}%`;
+            if (pauseMusicVolSlider) pauseMusicVolSlider.value = val;
+            if (pauseMusicVolText) pauseMusicVolText.textContent = `${val}%`;
+            localStorage.setItem('goldminer_music_volume', val);
+        };
+
+        // Load saved volume if any
+        const savedVolume = localStorage.getItem('goldminer_music_volume') || '30';
+        updateMusicVolume(savedVolume);
+
+        if (musicVolSlider) {
+            musicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
+        }
+        if (pauseMusicVolSlider) {
+            pauseMusicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
+        }
 
         const startInput = document.getElementById('playerNameInputStart');
         if (startInput) {
@@ -498,264 +530,338 @@ const Game = {
     },
 
     collectItem(item) {
-        if (item.destroyed) return;
-        
-        // If item is a rock (ROCK_L or ROCK_S), SKULL, or BONE, deduct money and DO NOT show quiz
-        if (item.type.includes('ROCK') || item.type === 'SKULL' || item.type === 'BONE') {
-            const penalty = item.value || 15;
-            this.cash -= penalty;
-            AudioSynth.playGrabSound();
-            this.spawnFloatingScore(item.x, item.y - 25, `-$${penalty}`, 'score-red');
-            this.setMinerState('WORRIED', 1200);
-            item.destroyed = true;
-            this.updateHUD();
-            this.checkGoldCleared();
-            return;
-        }
+        try {
+            if (item.destroyed) return;
+            
+            // If item is a rock (ROCK_L or ROCK_S), SKULL, or BONE, deduct money and DO NOT show quiz
+            if (item.type.includes('ROCK') || item.type === 'SKULL' || item.type === 'BONE') {
+                const penalty = item.value || 15;
+                this.cash -= penalty;
+                AudioSynth.playGrabSound();
+                this.spawnFloatingScore(item.x, item.y - 25, `-$${penalty}`, 'score-red');
+                this.setMinerState('WORRIED', 1200);
+                item.destroyed = true;
+                this.updateHUD();
+                this.checkGoldCleared();
+                return;
+            }
 
-        // Pause timer countdown
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
+            // Pause timer countdown
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+            
+            // Temporarily pause hook oscillation physics while answering the quiz
+            this.state = 'PAUSED';
+            this.triggerQuiz(item);
+        } catch (e) {
+            console.error("Error in collectItem:", e);
+            this.state = 'PLAYING';
+            this.resumeTimer();
         }
-        
-        // Temporarily pause hook oscillation physics while answering the quiz
-        this.state = 'PAUSED';
-        this.triggerQuiz(item);
     },
 
     triggerQuiz(item) {
-        if (!this.questions || this.questions.length === 0) {
-            this.loadFallbackQuestions();
-        }
-        
-        // Refill unused questions list if empty
-        if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
-            this.unusedQuestions = [...this.questions];
-        }
-        
-        // Select random question from unused questions
-        const randIdx = Math.floor(Math.random() * this.unusedQuestions.length);
-        const q = this.unusedQuestions[randIdx];
-        this.currentQuestion = q;
-        
-        // Remove question from list so it doesn't repeat
-        this.unusedQuestions.splice(randIdx, 1);
-        
-        const label = ITEM_TYPES[item.type].label;
-        document.getElementById('quizItemSummary').innerHTML = `กำลังขุด: <strong style="color: #ffea00;">${label}</strong> (มูลค่า: <strong style="color: #ffea00;">$${item.value}</strong>)`;
-        document.getElementById('quizQuestionText').textContent = q.question;
-        
-        const container = document.getElementById('quizChoicesContainer');
-        container.innerHTML = '';
-        
-        const fb = document.getElementById('quizFeedbackPanel');
-        fb.style.display = 'none';
-        fb.className = '';
-        
-        // Render 4 options
-        q.options.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-choice';
-            btn.textContent = opt;
-            btn.addEventListener('click', () => this.submitQuizAnswer(btn, opt, item));
-            container.appendChild(btn);
-        });
-        
-        // Setup 10-second Quiz Countdown Timer
-        if (this.quizTimerInterval) {
-            clearInterval(this.quizTimerInterval);
-            this.quizTimerInterval = null;
-        }
-
-        const totalQuizTime = (typeof TimeStampManager !== 'undefined' && TimeStampManager.quizTimeLimit) ? TimeStampManager.quizTimeLimit : 10;
-        this.quizStartTime = Date.now();
-        
-        const timerValEl = document.getElementById('quizTimerValue');
-        const timerBarEl = document.getElementById('quizTimerBar');
-        const timerBadgeEl = document.getElementById('quizTimerBadge');
-        
-        if (timerValEl) timerValEl.textContent = totalQuizTime;
-        if (timerBarEl) {
-            timerBarEl.style.width = '100%';
-            timerBarEl.style.background = 'linear-gradient(90deg, #4cd964, #ffcc00, #ff3b30)';
-        }
-        if (timerBadgeEl) {
-            timerBadgeEl.style.borderColor = '#ff4d4d';
-            timerBadgeEl.style.color = '#ff4d4d';
-        }
-
-        this.quizTimerInterval = setInterval(() => {
-            const elapsed = (Date.now() - this.quizStartTime) / 1000;
-            const remaining = Math.max(0, totalQuizTime - elapsed);
-            const remainingSec = Math.ceil(remaining);
+        try {
+            console.log("triggerQuiz called for item type:", item.type);
             
-            if (timerValEl) timerValEl.textContent = remainingSec;
-            if (timerBarEl) {
-                const percent = (remaining / totalQuizTime) * 100;
-                timerBarEl.style.width = `${percent}%`;
+            if (!this.questions || this.questions.length === 0) {
+                console.log("Questions list empty, loading fallback questions.");
+                this.loadFallbackQuestions();
             }
-
-            if (remainingSec <= 3 && timerBadgeEl) {
-                timerBadgeEl.style.borderColor = '#ff0000';
-                timerBadgeEl.style.color = '#ff0000';
+            
+            // Refill unused questions list if empty
+            if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
+                console.log("Unused questions list empty, refilling.");
+                this.unusedQuestions = [...this.questions];
             }
-
-            if (remaining <= 0) {
+            
+            if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
+                throw new Error("No questions available even after loading fallback.");
+            }
+            
+            // Select random question from unused questions
+            const randIdx = Math.floor(Math.random() * this.unusedQuestions.length);
+            const q = this.unusedQuestions[randIdx];
+            if (!q) {
+                throw new Error("Selected question is undefined.");
+            }
+            this.currentQuestion = q;
+            
+            // Remove question from list so it doesn't repeat
+            this.unusedQuestions.splice(randIdx, 1);
+            
+            const label = ITEM_TYPES[item.type] ? ITEM_TYPES[item.type].label : item.type;
+            const quizItemSummaryEl = document.getElementById('quizItemSummary');
+            if (quizItemSummaryEl) {
+                quizItemSummaryEl.innerHTML = `กำลังขุด: <strong style="color: #ffea00;">${label}</strong> (มูลค่า: <strong style="color: #ffea00;">$${item.value}</strong>)`;
+            }
+            
+            const quizQuestionTextEl = document.getElementById('quizQuestionText');
+            if (quizQuestionTextEl) {
+                quizQuestionTextEl.textContent = q.question;
+            }
+            
+            const container = document.getElementById('quizChoicesContainer');
+            if (container) {
+                container.innerHTML = '';
+                if (q.options) {
+                    q.options.forEach(opt => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn-choice';
+                        btn.textContent = opt;
+                        btn.addEventListener('click', () => this.submitQuizAnswer(btn, opt, item));
+                        container.appendChild(btn);
+                    });
+                }
+            }
+            
+            const fb = document.getElementById('quizFeedbackPanel');
+            if (fb) {
+                fb.style.display = 'none';
+                fb.className = '';
+            }
+            
+            // Setup 10-second Quiz Countdown Timer
+            if (this.quizTimerInterval) {
                 clearInterval(this.quizTimerInterval);
                 this.quizTimerInterval = null;
-                this.handleQuizTimeout(item);
             }
-        }, 100);
 
-        this.showOverlay('quizOverlay');
+            const totalQuizTime = (typeof TimeStampManager !== 'undefined' && TimeStampManager.quizTimeLimit) ? TimeStampManager.quizTimeLimit : 10;
+            this.quizStartTime = Date.now();
+            
+            const timerValEl = document.getElementById('quizTimerValue');
+            const timerBarEl = document.getElementById('quizTimerBar');
+            const timerBadgeEl = document.getElementById('quizTimerBadge');
+            
+            if (timerValEl) timerValEl.textContent = totalQuizTime;
+            if (timerBarEl) {
+                timerBarEl.style.width = '100%';
+                timerBarEl.style.background = 'linear-gradient(90deg, #4cd964, #ffcc00, #ff3b30)';
+            }
+            if (timerBadgeEl) {
+                timerBadgeEl.style.borderColor = '#ff4d4d';
+                timerBadgeEl.style.color = '#ff4d4d';
+            }
+
+            this.quizTimerInterval = setInterval(() => {
+                try {
+                    const elapsed = (Date.now() - this.quizStartTime) / 1000;
+                    const remaining = Math.max(0, totalQuizTime - elapsed);
+                    const remainingSec = Math.ceil(remaining);
+                    
+                    if (timerValEl) timerValEl.textContent = remainingSec;
+                    if (timerBarEl) {
+                        const percent = (remaining / totalQuizTime) * 100;
+                        timerBarEl.style.width = `${percent}%`;
+                    }
+
+                    if (remainingSec <= 3 && timerBadgeEl) {
+                        timerBadgeEl.style.borderColor = '#ff0000';
+                        timerBadgeEl.style.color = '#ff0000';
+                    }
+
+                    if (remaining <= 0) {
+                        clearInterval(this.quizTimerInterval);
+                        this.quizTimerInterval = null;
+                        this.handleQuizTimeout(item);
+                    }
+                } catch (err) {
+                    console.error("Error in quiz timer interval:", err);
+                }
+            }, 100);
+
+            this.showOverlay('quizOverlay');
+        } catch (error) {
+            console.error("Error in triggerQuiz:", error);
+            // Non-blocking fallback: Alert the user and resume game play
+            alert("⚠️ โหลดคำถามขัดข้องชั่วคราว: " + error.message + "\n(ระบบจะดำเนินการเล่นต่ออัตโนมัติ)");
+            this.hideOverlay('quizOverlay');
+            this.state = 'PLAYING';
+            this.resumeTimer();
+        }
     },
 
     handleQuizTimeout(item) {
-        const q = this.currentQuestion;
-        if (!q) return;
-
-        // Disable all choice buttons and append (เฉลย) tag to the correct answer
-        const buttons = document.querySelectorAll('.btn-choice');
-        buttons.forEach(btn => {
-            btn.disabled = true;
-            if (btn.textContent.trim() === q.answer.trim()) {
-                btn.classList.add('correct');
-                btn.innerHTML = `${q.answer} <span style="color: #4cd964; font-weight: bold; margin-left: 8px;">✅ (เฉลย)</span>`;
-            }
-        });
-
-        // Log timestamp event for timeout
-        if (typeof TimeStampManager !== 'undefined') {
-            TimeStampManager.logQuizEvent(q.question, null, q.answer, false, 10.0);
-        }
-
-        const fb = document.getElementById('quizFeedbackPanel');
-        fb.style.display = 'block';
-        fb.className = 'feedback-incorrect';
-        fb.innerHTML = `⏰ หมดเวลา 10 วินาที! <br><span style="font-size: 22px; color: #ffea00;">เฉลยข้อที่ถูกต้องคือ: "${q.answer}"</span> 😢`;
-
-        AudioSynth.playGrabSound(); // buzzer sound
-        this.spawnFloatingScore(item.x, item.y - 25, `Time Out! ($0)`, 'score-red');
-        this.setMinerState('WORRIED', 2000);
-
-        item.destroyed = true;
-        this.updateHUD();
-
-        const goldCleared = this.checkGoldCleared();
-        if (!goldCleared) {
-            // Keep correct answer revealed on screen for 3 seconds before resuming
-            setTimeout(() => {
+        try {
+            const q = this.currentQuestion;
+            if (!q) {
                 this.hideOverlay('quizOverlay');
                 this.state = 'PLAYING';
                 this.resumeTimer();
-            }, 3000);
+                return;
+            }
+
+            // Disable all choice buttons and append (เฉลย) tag to the correct answer
+            const buttons = document.querySelectorAll('.btn-choice');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent.trim() === q.answer.trim()) {
+                    btn.classList.add('correct');
+                    btn.innerHTML = `${q.answer} <span style="color: #4cd964; font-weight: bold; margin-left: 8px;">✅ (เฉลย)</span>`;
+                }
+            });
+
+            // Log timestamp event for timeout
+            if (typeof TimeStampManager !== 'undefined') {
+                TimeStampManager.logQuizEvent(q.question, null, q.answer, false, 10.0);
+            }
+
+            const fb = document.getElementById('quizFeedbackPanel');
+            if (fb) {
+                fb.style.display = 'block';
+                fb.className = 'feedback-incorrect';
+                fb.innerHTML = `⏰ หมดเวลา 10 วินาที! <br><span style="font-size: 22px; color: #ffea00;">เฉลยข้อที่ถูกต้องคือ: "${q.answer}"</span> 😢`;
+            }
+
+            AudioSynth.playGrabSound(); // buzzer sound
+            this.spawnFloatingScore(item.x, item.y - 25, `Time Out! ($0)`, 'score-red');
+            this.setMinerState('WORRIED', 2000);
+
+            item.destroyed = true;
+            this.updateHUD();
+
+            const goldCleared = this.checkGoldCleared();
+            if (!goldCleared) {
+                // Keep correct answer revealed on screen for 3 seconds before resuming
+                setTimeout(() => {
+                    this.hideOverlay('quizOverlay');
+                    this.state = 'PLAYING';
+                    this.resumeTimer();
+                }, 3000);
+            }
+        } catch (e) {
+            console.error("Error in handleQuizTimeout:", e);
+            this.hideOverlay('quizOverlay');
+            this.state = 'PLAYING';
+            this.resumeTimer();
         }
     },
 
     submitQuizAnswer(clickedBtn, selectedOption, item) {
-        if (this.quizTimerInterval) {
-            clearInterval(this.quizTimerInterval);
-            this.quizTimerInterval = null;
-        }
+        try {
+            if (this.quizTimerInterval) {
+                clearInterval(this.quizTimerInterval);
+                this.quizTimerInterval = null;
+            }
 
-        const q = this.currentQuestion;
-        const isCorrect = selectedOption === q.answer;
-        const timeSpent = this.quizStartTime ? (Date.now() - this.quizStartTime) / 1000 : 0;
-        
-        // Log timestamp event
-        if (typeof TimeStampManager !== 'undefined') {
-            TimeStampManager.logQuizEvent(q.question, selectedOption, q.answer, isCorrect, timeSpent);
-        }
-        
-        // Disable choices and highlight correct option (เฉลย)
-        const buttons = document.querySelectorAll('.btn-choice');
-        buttons.forEach(btn => {
-            btn.disabled = true;
-            if (btn.textContent.trim() === q.answer.trim()) {
-                btn.classList.add('correct');
-                if (!isCorrect) {
-                    btn.innerHTML = `${q.answer} <span style="color: #4cd964; font-weight: bold; margin-left: 8px;">✅ (เฉลย)</span>`;
-                }
-            } else if (btn === clickedBtn && !isCorrect) {
-                btn.classList.add('incorrect');
-                btn.innerHTML = `${selectedOption} <span style="color: #ff3b30; font-weight: bold; margin-left: 8px;">❌</span>`;
-            }
-        });
-        
-        const fb = document.getElementById('quizFeedbackPanel');
-        fb.style.display = 'block';
-        
-        let finalVal = item.value;
-        let scoreClass = 'score-yellow';
-        
-        if (item.type.includes('ROCK') && this.hasRockBook) {
-            finalVal *= 3;
-            scoreClass = 'score-green';
-        }
-        if (item.type === 'DIAMOND' && this.hasDiamondPolish) {
-            finalVal = Math.floor(finalVal * 1.5);
-            scoreClass = 'score-green';
-        }
-        
-        if (isCorrect) {
-            fb.className = 'feedback-correct';
-            
-            if (item.type === 'MYSTERY_BAG') {
-                AudioSynth.playBagSound();
-                const roll = Math.random();
-                if (roll < 0.60) {
-                    const minCash = this.hasClover ? 300 : 100;
-                    const maxCash = this.hasClover ? 1200 : 700;
-                    const randomVal = Math.floor(minCash + Math.random() * (maxCash - minCash));
-                    this.cash += randomVal;
-                    fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบเงิน $${randomVal}! 💰`;
-                    this.spawnFloatingScore(item.x, item.y - 25, `+$${randomVal}`, 'score-green');
-                } else if (roll < 0.80) {
-                    const count = this.hasClover ? 2 : 1;
-                    this.dynamite += count;
-                    document.getElementById('dynamiteValue').textContent = this.dynamite;
-                    fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบไดนาไมต์ +${count} ลูก! 🧨`;
-                    this.spawnFloatingScore(item.x, item.y - 25, `+${count} Dynamite!`, 'score-green');
-                } else {
-                    this.hasStrengthDrink = true;
-                    fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบน้ำยาเพิ่มพลัง! 💪`;
-                    this.spawnFloatingScore(item.x, item.y - 25, `Strength Drink!`, 'score-green');
-                }
-            } else {
-                if (item.type === 'DIAMOND') {
-                    AudioSynth.playDiamondSound();
-                } else {
-                    AudioSynth.playGoldSound(item.weight);
-                }
-                
-                const reward = finalVal + 50; // $50 bonus for correct
-                this.cash += reward;
-                fb.textContent = `ตอบถูก! ได้รับเงิน $${finalVal} + โบนัสภาษาอังกฤษ $50! 🌟`;
-                this.spawnFloatingScore(item.x, item.y - 25, `+$${reward}`, 'score-green');
-            }
-            
-            this.setMinerState('HAPPY', 1500);
-        } else {
-            fb.className = 'feedback-incorrect';
-            fb.innerHTML = `Incorrect! เฉลยข้อที่ถูกต้องคือ: <strong style="color: #ffea00;">"${q.answer}"</strong> 😢`;
-            
-            AudioSynth.playGrabSound(); // play buzzer
-            this.spawnFloatingScore(item.x, item.y - 25, `$0 Lost!`, 'score-red');
-            this.setMinerState('WORRIED', 1500);
-        }
-        
-        item.destroyed = true;
-        this.updateHUD();
-        
-        const goldCleared = this.checkGoldCleared();
-        if (!goldCleared) {
-            // Wait 2.5 seconds, then transition back to gameplay
-            setTimeout(() => {
+            const q = this.currentQuestion;
+            if (!q) {
                 this.hideOverlay('quizOverlay');
                 this.state = 'PLAYING';
                 this.resumeTimer();
-            }, 2500);
+                return;
+            }
+            const isCorrect = selectedOption === q.answer;
+            const timeSpent = this.quizStartTime ? (Date.now() - this.quizStartTime) / 1000 : 0;
+            
+            // Log timestamp event
+            if (typeof TimeStampManager !== 'undefined') {
+                TimeStampManager.logQuizEvent(q.question, selectedOption, q.answer, isCorrect, timeSpent);
+            }
+            
+            // Disable choices and highlight correct option (เฉลย)
+            const buttons = document.querySelectorAll('.btn-choice');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent.trim() === q.answer.trim()) {
+                    btn.classList.add('correct');
+                    if (!isCorrect) {
+                        btn.innerHTML = `${q.answer} <span style="color: #4cd964; font-weight: bold; margin-left: 8px;">✅ (เฉลย)</span>`;
+                    }
+                } else if (btn === clickedBtn && !isCorrect) {
+                    btn.classList.add('incorrect');
+                    btn.innerHTML = `${selectedOption} <span style="color: #ff3b30; font-weight: bold; margin-left: 8px;">❌</span>`;
+                }
+            });
+            
+            const fb = document.getElementById('quizFeedbackPanel');
+            if (fb) {
+                fb.style.display = 'block';
+            }
+            
+            let finalVal = item.value;
+            let scoreClass = 'score-yellow';
+            
+            if (item.type.includes('ROCK') && this.hasRockBook) {
+                finalVal *= 3;
+                scoreClass = 'score-green';
+            }
+            if (item.type === 'DIAMOND' && this.hasDiamondPolish) {
+                finalVal = Math.floor(finalVal * 1.5);
+                scoreClass = 'score-green';
+            }
+            
+            if (isCorrect) {
+                if (fb) {
+                    fb.className = 'feedback-correct';
+                }
+                
+                if (item.type === 'MYSTERY_BAG') {
+                    AudioSynth.playBagSound();
+                    const roll = Math.random();
+                    if (roll < 0.60) {
+                        const minCash = this.hasClover ? 300 : 100;
+                        const maxCash = this.hasClover ? 1200 : 700;
+                        const randomVal = Math.floor(minCash + Math.random() * (maxCash - minCash));
+                        this.cash += randomVal;
+                        if (fb) fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบเงิน $${randomVal}! 💰`;
+                        this.spawnFloatingScore(item.x, item.y - 25, `+$${randomVal}`, 'score-green');
+                    } else if (roll < 0.80) {
+                        const count = this.hasClover ? 2 : 1;
+                        this.dynamite += count;
+                        document.getElementById('dynamiteValue').textContent = this.dynamite;
+                        if (fb) fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบไดนาไมต์ +${count} ลูก! 🧨`;
+                        this.spawnFloatingScore(item.x, item.y - 25, `+${count} Dynamite!`, 'score-green');
+                    } else {
+                        this.hasStrengthDrink = true;
+                        if (fb) fb.textContent = `ตอบถูก! เปิดถุงสมบัติพบน้ำยาเพิ่มพลัง! 💪`;
+                        this.spawnFloatingScore(item.x, item.y - 25, `Strength Drink!`, 'score-green');
+                    }
+                } else {
+                    if (item.type === 'DIAMOND') {
+                        AudioSynth.playDiamondSound();
+                    } else {
+                        AudioSynth.playGoldSound(item.weight);
+                    }
+                    
+                    const reward = finalVal + 50; // $50 bonus for correct
+                    this.cash += reward;
+                    if (fb) fb.textContent = `ตอบถูก! ได้รับเงิน $${finalVal} + โบนัสภาษาอังกฤษ $50! 🌟`;
+                    this.spawnFloatingScore(item.x, item.y - 25, `+$${reward}`, 'score-green');
+                }
+                
+                this.setMinerState('HAPPY', 1500);
+            } else {
+                if (fb) {
+                    fb.className = 'feedback-incorrect';
+                    fb.innerHTML = `Incorrect! เฉลยข้อที่ถูกต้องคือ: <strong style="color: #ffea00;">"${q.answer}"</strong> 😢`;
+                }
+                
+                AudioSynth.playGrabSound(); // play buzzer
+                this.spawnFloatingScore(item.x, item.y - 25, `$0 Lost!`, 'score-red');
+                this.setMinerState('WORRIED', 1500);
+            }
+            
+            item.destroyed = true;
+            this.updateHUD();
+            
+            const goldCleared = this.checkGoldCleared();
+            if (!goldCleared) {
+                // Wait 2.5 seconds, then transition back to gameplay
+                setTimeout(() => {
+                    this.hideOverlay('quizOverlay');
+                    this.state = 'PLAYING';
+                    this.resumeTimer();
+                }, 2500);
+            }
+        } catch (e) {
+            console.error("Error in submitQuizAnswer:", e);
+            this.hideOverlay('quizOverlay');
+            this.state = 'PLAYING';
+            this.resumeTimer();
         }
     },
 

@@ -103,6 +103,12 @@
                             </div>
                         </div>
                         
+                        <!-- Music Volume Control -->
+                        <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px;">
+                            <span style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵 เสียงเพลง BGM: <span id="musicVolText">30%</span></span>
+                            <input type="range" id="musicVolSlider" min="0" max="100" value="30" style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
+                        </div>
+
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 6px;">
                             <input type="text" id="playerNameInputStart" placeholder="กรอกชื่อผู้เล่น..." maxlength="12" style="background: rgba(255, 255, 255, 0.1); border: 2px solid #ffea00; border-radius: 12px; color: white; padding: 10px; font-size: 18px; text-align: center; font-family: inherit; outline: none; box-shadow: 0 0 10px rgba(255, 234, 0, 0.15);">
                             <button class="btn-primary" id="openCameraBtnStart" style="padding: 10px 0; width: 100%; font-size: 18px; background: linear-gradient(135deg, #4ecdc4, #45b7d1); border-bottom-color: #2b8a9e; color: #003049;">📷 ถ่ายรูปเปลี่ยนหน้าตัวละคร</button>
@@ -284,6 +290,13 @@
         <div class="overlay" id="pauseOverlay">
             <div class="glass-panel" style="max-width: 400px;">
                 <div class="overlay-title" style="font-size: 36px; margin-bottom: 24px;">หยุดเกมชั่วคราว</div>
+                
+                <!-- Music Volume Control -->
+                <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 18px;">
+                    <span style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵 เสียงเพลง BGM: <span id="pauseMusicVolText">30%</span></span>
+                    <input type="range" id="pauseMusicVolSlider" min="0" max="100" value="30" style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
+                </div>
+                
                 <button class="btn-primary" id="resumeBtn" style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px;">เล่นต่อ ▶️</button>
                 <button class="btn-primary" id="pauseRestartBtn" style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">เริ่มด่านใหม่ 🔄</button>
                 <button class="btn-primary" id="pauseHomeBtn" style="width: 100%; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white;">หน้าหลัก 🏠</button>
