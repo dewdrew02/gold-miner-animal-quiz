@@ -473,6 +473,7 @@ const Game = {
         this.setMinerState('WORRIED', 3000);
         
         setTimeout(() => {
+            this.autoSaveScore();
             this.showOverlay('gameOverOverlay');
             document.getElementById('finalScore').textContent = this.cash;
             document.getElementById('playerNameInput').value = '';
@@ -881,6 +882,16 @@ const Game = {
     // --- GAME STATE TRANSITIONS ---
     startGame() {
         AudioSynth.init();
+        
+        // Ensure name is saved immediately when starting
+        const startInput = document.getElementById('playerNameInputStart');
+        if (startInput) {
+            const name = startInput.value.trim();
+            if (name) {
+                localStorage.setItem('goldminer_player_name', name);
+            }
+        }
+        
         this.hideAllOverlays();
         this.showOverlay('checkpointOverlay');
     },
@@ -947,12 +958,10 @@ const Game = {
     endLevel() {
         this.state = 'PAUSED';
         
-        // Auto-save statistics of each level (win or lose)
-        this.autoSaveScore();
-        
         if (this.cash >= this.targetScore) {
             if (this.level === 3) {
                 // Game Completed!
+                this.autoSaveScore();
                 this.showOverlay('gameOverOverlay');
                 
                 const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
@@ -973,12 +982,24 @@ const Game = {
                 if (typeof CheckpointManager !== 'undefined') {
                     CheckpointManager.unlockLevel(this.level + 1);
                 }
+                
+                // Change the button text based on whether there's a minigame transition (only for Level 1 -> 2)
+                const goShopBtn = document.getElementById('goShopBtn');
+                if (goShopBtn) {
+                    if (this.level === 1) {
+                        goShopBtn.innerHTML = 'ขึ้นรถไฟไปด่านถัดไป 🚂';
+                    } else {
+                        goShopBtn.innerHTML = 'ไปยังร้านค้า 🛒';
+                    }
+                }
+                
                 this.showOverlay('nextLevelOverlay');
                 document.getElementById('transitionCash').textContent = this.cash;
                 document.getElementById('transitionTarget').textContent = this.targetScore;
             }
         } else {
             // Failed to reach goal!
+            this.autoSaveScore();
             this.showOverlay('gameOverOverlay');
             
             const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
@@ -1101,14 +1122,18 @@ const Game = {
     },
 
     autoSaveScore() {
-        let name = localStorage.getItem('goldminer_player_name');
+        // Read directly from the start screen input first
+        const startInput = document.getElementById('playerNameInputStart');
+        let name = startInput ? startInput.value.trim() : '';
+        
+        // If empty, fall back to localStorage
         if (!name) {
-            const startInput = document.getElementById('playerNameInputStart');
-            if (startInput && startInput.value.trim()) {
-                name = startInput.value.trim();
-                localStorage.setItem('goldminer_player_name', name);
-            }
+            name = localStorage.getItem('goldminer_player_name');
+        } else {
+            // Update localStorage with the latest name
+            localStorage.setItem('goldminer_player_name', name);
         }
+        
         if (!name) {
             name = 'คนขุดทอง'; // Default name
         }

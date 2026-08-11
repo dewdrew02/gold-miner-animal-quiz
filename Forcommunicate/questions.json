@@ -1,106 +1,71 @@
 [
   {
-    "question": "What animal barks? (Woof! Woof!)",
+    "question": "Which animal barks? (Woof! Woof!)",
     "options": ["Dog", "Cat", "Lion", "Fish"],
     "answer": "Dog"
   },
   {
-    "question": "What animal meows? (Meow! Meow!)",
+    "question": "Which animal meows? (Meow! Meow!)",
     "options": ["Bird", "Cat", "Cow", "Rabbit"],
     "answer": "Cat"
   },
   {
-    "question": "Which animal has a very long neck?",
-    "options": ["Frog", "Giraffe", "Dog", "Panda"],
+    "question": "Which animal has a very long neck to eat leaves?",
+    "options": ["Giraffe", "Elephant", "Dog", "Panda"],
     "answer": "Giraffe"
   },
   {
-    "question": "Which animal has a long nose (trunk) and big ears?",
+    "question": "Which animal has a very long nose (trunk) and big ears?",
     "options": ["Elephant", "Cat", "Bee", "Bird"],
     "answer": "Elephant"
   },
   {
-    "question": "Which animal hops and loves to eat carrots?",
+    "question": "Which animal hops, has long ears, and loves carrots?",
     "options": ["Rabbit", "Tiger", "Shark", "Pig"],
     "answer": "Rabbit"
   },
   {
-    "question": "Which animal says moo? (Moo! Moo!)",
+    "question": "Which animal says 'Moo' and gives us milk?",
     "options": ["Chicken", "Cow", "Fish", "Horse"],
     "answer": "Cow"
   },
   {
-    "question": "Which bird can swim but cannot fly?",
-    "options": ["Penguin", "Parrot", "Eagle", "Owl"],
-    "answer": "Penguin"
-  },
-  {
-    "question": "Which animal loves to eat bananas and climb trees?",
+    "question": "Which animal loves to swing on trees and eat bananas?",
     "options": ["Monkey", "Turtle", "Snake", "Sheep"],
     "answer": "Monkey"
   },
   {
-    "question": "Which animal is pink and says oink? (Oink! Oink!)",
+    "question": "Which pink animal says 'Oink Oink' on the farm?",
     "options": ["Horse", "Pig", "Lion", "Giraffe"],
     "answer": "Pig"
   },
   {
-    "question": "Which animal lives in water and swims?",
+    "question": "Which animal lives under water and swims with fins?",
     "options": ["Fish", "Cat", "Bird", "Rabbit"],
     "answer": "Fish"
   },
   {
-    "question": "What insect makes sweet honey?",
-    "options": ["Ant", "Bee", "Spider", "Fly"],
-    "answer": "Bee"
+    "question": "Which animal has wings, feathers, and can fly?",
+    "options": ["Dog", "Bird", "Frog", "Snake"],
+    "answer": "Bird"
   },
   {
-    "question": "Which animal has black and white stripes?",
-    "options": ["Zebra", "Lion", "Monkey", "Dog"],
-    "answer": "Zebra"
-  },
-  {
-    "question": "Which animal is known as the king of the jungle?",
-    "options": ["Lion", "Sheep", "Mouse", "Turtle"],
-    "answer": "Lion"
-  },
-  {
-    "question": "Which animal says quack? (Quack! Quack!)",
+    "question": "Which bird says 'Quack Quack' and swims in ponds?",
     "options": ["Duck", "Cow", "Cat", "Cheetah"],
     "answer": "Duck"
   },
   {
-    "question": "Which animal carries a heavy shell on its back and walks very slowly?",
+    "question": "Which slow animal carries its hard shell on its back?",
     "options": ["Rabbit", "Turtle", "Fox", "Panda"],
     "answer": "Turtle"
   },
   {
-    "question": "What is a baby dog called?",
-    "options": ["Puppy", "Kitten", "Cub", "Chick"],
-    "answer": "Puppy"
-  },
-  {
-    "question": "What is a baby cat called?",
-    "options": ["Kitten", "Puppy", "Piglet", "Calf"],
-    "answer": "Kitten"
-  },
-  {
-    "question": "Which animal has soft white wool and says baa? (Baa! Baa!)",
+    "question": "Which animal has soft white wool and says 'Baa Baa'?",
     "options": ["Sheep", "Lion", "Tiger", "Monkey"],
     "answer": "Sheep"
   },
   {
-    "question": "Which animal has a pocket (pouch) to carry its baby?",
-    "options": ["Kangaroo", "Dog", "Bird", "Fish"],
-    "answer": "Kangaroo"
-  },
-  {
-    "question": "Which insect has beautiful colorful wings?",
-    "options": ["Butterfly", "Ant", "Worm", "Bee"],
-    "answer": "Butterfly"
-  },
-  {
-    "question": "Which animal says ribbit and jumps in ponds? (Ribbit! Ribbit!)",
+    "question": "Which green animal says 'Ribbit' and jumps in the pond?",
     "options": ["Frog", "Giraffe", "Elephant", "Horse"],
     "answer": "Frog"
   },
@@ -110,53 +75,128 @@
     "answer": "Snake"
   },
   {
-    "question": "Which animal is very small, squeaks, and loves cheese?",
+    "question": "Which animal looks like a horse with black and white stripes?",
+    "options": ["Zebra", "Lion", "Monkey", "Dog"],
+    "answer": "Zebra"
+  },
+  {
+    "question": "Which black-and-white bear loves to eat bamboo?",
+    "options": ["Panda", "Koala", "Polar Bear", "Tiger"],
+    "answer": "Panda"
+  },
+  {
+    "question": "Which bird lives in the cold ice, wears a black suit, and swims but cannot fly?",
+    "options": ["Penguin", "Parrot", "Eagle", "Owl"],
+    "answer": "Penguin"
+  },
+  {
+    "question": "Which farm bird gives us eggs and says 'Cluck Cluck'?",
+    "options": ["Chicken", "Duck", "Bird", "Rooster"],
+    "answer": "Chicken"
+  },
+  {
+    "question": "Which tiny animal loves cheese and squeaks?",
     "options": ["Mouse", "Bear", "Elephant", "Tiger"],
     "answer": "Mouse"
   },
   {
-    "question": "Which big bird wakes people up in the morning? (Cock-a-doodle-doo!)",
-    "options": ["Rooster", "Penguin", "Duck", "Eagle"],
-    "answer": "Rooster"
+    "question": "Which small insect flies, has yellow and black stripes, and makes honey?",
+    "options": ["Bee", "Ant", "Spider", "Fly"],
+    "answer": "Bee"
   },
   {
-    "question": "Which animal is a large white bear that lives in the cold ice?",
-    "options": ["Polar Bear", "Panda", "Koala", "Brown Bear"],
-    "answer": "Polar Bear"
+    "question": "Which insect has beautiful, colorful wings and flies around flowers?",
+    "options": ["Butterfly", "Ant", "Worm", "Bee"],
+    "answer": "Butterfly"
   },
   {
-    "question": "How many legs does an octopus have?",
-    "options": ["8", "4", "6", "10"],
-    "answer": "8"
+    "question": "Which big cat is known as the 'king of the jungle'?",
+    "options": ["Lion", "Sheep", "Mouse", "Turtle"],
+    "answer": "Lion"
   },
   {
-    "question": "What is the largest animal in the ocean?",
-    "options": ["Blue Whale", "Shark", "Dolphin", "Octopus"],
-    "answer": "Blue Whale"
+    "question": "Which wild cat has orange fur with black stripes?",
+    "options": ["Tiger", "Lion", "Dog", "Cat"],
+    "answer": "Tiger"
   },
   {
-    "question": "Which animal can run very fast and has a beautiful mane?",
+    "question": "Which big, furry animal loves honey and sleeps all winter?",
+    "options": ["Bear", "Rabbit", "Monkey", "Giraffe"],
+    "answer": "Bear"
+  },
+  {
+    "question": "Which animal hops around and has a pouch to carry its baby?",
+    "options": ["Kangaroo", "Dog", "Bird", "Fish"],
+    "answer": "Kangaroo"
+  },
+  {
+    "question": "Which animal is strong, runs very fast, and people can ride?",
     "options": ["Horse", "Cat", "Sheep", "Elephant"],
     "answer": "Horse"
   },
   {
-    "question": "Which animal is slow-moving and lives in trees?",
-    "options": ["Sloth", "Squirrel", "Monkey", "Koala"],
-    "answer": "Sloth"
-  },
-  {
-    "question": "What do pandas love to eat?",
-    "options": ["Bamboo", "Fish", "Apples", "Grass"],
-    "answer": "Bamboo"
-  },
-  {
-    "question": "Which bird can mimic human speech and has colorful feathers?",
-    "options": ["Parrot", "Eagle", "Penguin", "Owl"],
-    "answer": "Parrot"
-  },
-  {
-    "question": "Which bird is wise and stays awake at night?",
+    "question": "Which bird stays awake at night and is known for being wise?",
     "options": ["Owl", "Parrot", "Duck", "Chicken"],
     "answer": "Owl"
+  },
+  {
+    "question": "Which large reptile has sharp teeth and lives in rivers?",
+    "options": ["Crocodile", "Frog", "Fish", "Snake"],
+    "answer": "Crocodile"
+  },
+  {
+    "question": "Which smart animal has a bushy tail and orange-red fur?",
+    "options": ["Fox", "Rabbit", "Deer", "Koala"],
+    "answer": "Fox"
+  },
+  {
+    "question": "Which large fish with sharp teeth lives in the ocean?",
+    "options": ["Shark", "Goldfish", "Dolphin", "Octopus"],
+    "answer": "Shark"
+  },
+  {
+    "question": "Which ocean animal walks sideways and has two big claws?",
+    "options": ["Crab", "Fish", "Turtle", "Whale"],
+    "answer": "Crab"
+  },
+  {
+    "question": "Which smart, friendly ocean animal loves to jump out of water?",
+    "options": ["Dolphin", "Shark", "Crab", "Octopus"],
+    "answer": "Dolphin"
+  },
+  {
+    "question": "Which ocean creature has eight long arms?",
+    "options": ["Octopus", "Shark", "Crab", "Fish"],
+    "answer": "Octopus"
+  },
+  {
+    "question": "Which cute gray animal lives in Australia and eats eucalyptus leaves?",
+    "options": ["Koala", "Panda", "Sloth", "Monkey"],
+    "answer": "Koala"
+  },
+  {
+    "question": "Which animal has one or two humps and lives in the dry desert?",
+    "options": ["Camel", "Horse", "Elephant", "Zebra"],
+    "answer": "Camel"
+  },
+  {
+    "question": "Which gentle forest animal has spots and beautiful antlers?",
+    "options": ["Deer", "Fox", "Bear", "Rabbit"],
+    "answer": "Deer"
+  },
+  {
+    "question": "Which small, furry animal has a bushy tail and loves eating nuts?",
+    "options": ["Squirrel", "Mouse", "Rabbit", "Cat"],
+    "answer": "Squirrel"
+  },
+  {
+    "question": "Which small creature has eight legs and spins webs?",
+    "options": ["Spider", "Bee", "Ant", "Butterfly"],
+    "answer": "Spider"
+  },
+  {
+    "question": "Which colorful bird can talk and mimic human voices?",
+    "options": ["Parrot", "Eagle", "Penguin", "Owl"],
+    "answer": "Parrot"
   }
 ]
