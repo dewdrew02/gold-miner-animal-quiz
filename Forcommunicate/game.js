@@ -214,7 +214,39 @@ const Game = {
             if (this.state === 'PLAYING') this.useDynamite();
         });
         
-        document.getElementById('saveScoreBtn').addEventListener('click', () => this.saveCurrentScore());
+        const saveScoreBtn = document.getElementById('saveScoreBtn');
+        if (saveScoreBtn) {
+            saveScoreBtn.addEventListener('click', () => this.saveCurrentScore());
+        }
+
+        // Music Volume Slider handling
+        const musicVolSlider = document.getElementById('musicVolSlider');
+        const musicVolText = document.getElementById('musicVolText');
+        const pauseMusicVolSlider = document.getElementById('pauseMusicVolSlider');
+        const pauseMusicVolText = document.getElementById('pauseMusicVolText');
+
+        const updateMusicVolume = (val) => {
+            const vol = parseFloat(val) / 100;
+            if (typeof AudioSynth !== 'undefined') {
+                AudioSynth.setMusicVolume(vol);
+            }
+            if (musicVolSlider) musicVolSlider.value = val;
+            if (musicVolText) musicVolText.textContent = `${val}%`;
+            if (pauseMusicVolSlider) pauseMusicVolSlider.value = val;
+            if (pauseMusicVolText) pauseMusicVolText.textContent = `${val}%`;
+            localStorage.setItem('goldminer_music_volume', val);
+        };
+
+        // Load saved volume if any
+        const savedVolume = localStorage.getItem('goldminer_music_volume') || '30';
+        updateMusicVolume(savedVolume);
+
+        if (musicVolSlider) {
+            musicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
+        }
+        if (pauseMusicVolSlider) {
+            pauseMusicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
+        }
 
         // Music Volume Slider handling
         const musicVolSlider = document.getElementById('musicVolSlider');
