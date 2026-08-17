@@ -5,10 +5,10 @@ const Game = {
     ctx: null,
     container: null,
     floatingLayer: null,
-    
+
     // Core Game States: 'START', 'PLAYING', 'PAUSED', 'TRANSITION', 'SHOP', 'GAMEOVER'
     state: 'START',
-    
+
     // Stats & Upgrades
     cash: 0,
     level: 1,
@@ -16,7 +16,7 @@ const Game = {
     timeLeft: 60,
     dynamite: 0,
     timerInterval: null,
-    
+
     // Active Shop Items and temporary power-ups
     shopItems: [],
     hasStrengthDrink: false,
@@ -29,7 +29,7 @@ const Game = {
     quizTimerInterval: null,
     quizStartTime: null,
     quizResumeTimeout: null,
-    
+
     // Gameplay Entities
     claw: {
         x: GAME_WIDTH / 2,
@@ -42,18 +42,18 @@ const Game = {
         state: 'SWING', // 'SWING', 'SHOOT', 'RETRACT'
         swingDir: 1, // 1 for right, -1 for left
         swingSpeed: 0.018,
-        shootSpeed: 5,
-        baseRetractSpeed: 5,
+        shootSpeed: 5.5,
+        baseRetractSpeed: 3.2,
         grabbedItem: null,
         hookSize: 14
     },
     items: [],
     particles: [],
-    
+
     // Miner animations state
     minerState: 'IDLE', // 'IDLE', 'CRANKING', 'HAPPY', 'STRAINING', 'WORRIED'
     minerReactionTimer: 0,
-    
+
     // Leaders
     highScores: [],
 
@@ -62,14 +62,14 @@ const Game = {
         this.ctx = this.canvas.getContext('2d');
         this.container = document.getElementById('gameContainer');
         this.floatingLayer = document.getElementById('floatingScoreLayer');
-        
+
         this.loadFallbackQuestions(); // Initialize questions immediately synchronously
         this.loadHighScores();
         this.loadQuestions();
         this.setupEventListeners();
         this.resizeGame();
         this.renderMenuHighScores();
-        
+
         // Add Enter Game transition
         const enterGameBtn = document.getElementById('enterGameBtn');
         if (enterGameBtn) {
@@ -211,7 +211,7 @@ const Game = {
 
         // HTML Buttons linking
         document.getElementById('startBtn').addEventListener('click', () => this.startGame());
-        
+
         const selectLevelBtnStart = document.getElementById('selectLevelBtnStart');
         if (selectLevelBtnStart) {
             selectLevelBtnStart.addEventListener('click', () => {
@@ -248,7 +248,7 @@ const Game = {
             e.stopPropagation();
             if (this.state === 'PLAYING') this.useDynamite();
         });
-        
+
         const saveScoreBtn = document.getElementById('saveScoreBtn');
         if (saveScoreBtn) {
             saveScoreBtn.addEventListener('click', () => this.saveCurrentScore());
@@ -288,7 +288,7 @@ const Game = {
         if (startInput) {
             const savedName = localStorage.getItem('goldminer_player_name');
             if (savedName) startInput.value = savedName;
-            
+
             startInput.addEventListener('input', () => {
                 localStorage.setItem('goldminer_player_name', startInput.value.trim());
             });
@@ -338,7 +338,7 @@ const Game = {
 
         // Update Claw Physics
         const claw = this.claw;
-        
+
         if (claw.state === 'SWING') {
             this.minerState = 'IDLE';
             claw.angle += claw.swingDir * claw.swingSpeed;
@@ -350,16 +350,16 @@ const Game = {
                 claw.angle = -1.25;
                 claw.swingDir = 1;
             }
-            
+
             // Sync claw position with minimal length along swing arc
             claw.x = claw.originX + Math.sin(claw.angle) * claw.minLength;
             claw.y = claw.originY + Math.cos(claw.angle) * claw.minLength;
-        } 
+        }
         else if (claw.state === 'SHOOT') {
             this.minerState = 'IDLE';
             claw.x += Math.sin(claw.angle) * claw.shootSpeed;
             claw.y += Math.cos(claw.angle) * claw.shootSpeed;
-            
+
             // Check out of bounds
             if (claw.x < 15 || claw.x > GAME_WIDTH - 15 || claw.y > GAME_HEIGHT - 15) {
                 claw.state = 'RETRACT';
@@ -368,7 +368,7 @@ const Game = {
                 // Check collisions with ground items
                 for (let item of this.items) {
                     if (item.destroyed || item.grabbed) continue;
-                    
+
                     const dist = Math.hypot(claw.x - item.x, claw.y - item.y);
                     if (dist < claw.hookSize + item.radius) {
                         // Hook item!
@@ -376,7 +376,7 @@ const Game = {
                         claw.state = 'RETRACT';
                         claw.grabbedItem = item;
                         item.grabbed = true;
-                        
+
                         // If TNT barrel, explode instantly and lose game!
                         if (item.type === 'TNT') {
                             this.triggerTNTGameOver(item);
@@ -392,48 +392,48 @@ const Game = {
                     }
                 }
             }
-        } 
+        }
         else if (claw.state === 'RETRACT') {
             let speedMultiplier = 1.0;
             let totalWeight = 0;
-            
+
             if (claw.grabbedItem) {
                 totalWeight = claw.grabbedItem.weight;
                 if (this.hasStrengthDrink) {
-                    speedMultiplier = 1.5; // 50% faster pull with drink
+                    speedMultiplier = 1.8; // 80% faster pull with drink
                 }
             } else {
-                // Empty return is fast and snappy
-                speedMultiplier = 1.8; 
+                // Empty return speed
+                speedMultiplier = 1.4; 
                 this.setMinerState('CRANKING', 50);
             }
             
-            // Retract speed calculation: snappy and responsive so it never feels frozen
-            const pullSpeed = Math.max(2.4, (claw.baseRetractSpeed / (1 + totalWeight * 0.32)) * speedMultiplier);
+            // Retract speed calculation: noticeably slower and heavy when pulling
+            const pullSpeed = Math.max(0.7, (claw.baseRetractSpeed / (1 + totalWeight * 0.42)) * speedMultiplier);
             AudioSynth.playReelSound(pullSpeed);
-            
+
             // Vector calculation back to origin
             const dx = claw.originX - claw.x;
             const dy = claw.originY - claw.y;
             const dist = Math.hypot(dx, dy);
-            
+
             if (dist < pullSpeed) {
                 // Returned to origin!
                 claw.x = claw.originX;
                 claw.y = claw.originY;
                 claw.state = 'SWING';
-                
+
                 if (claw.grabbedItem) {
                     const itemToCollect = claw.grabbedItem;
                     claw.grabbedItem = null;
                     this.collectItem(itemToCollect);
                 }
-                
+
                 this.minerState = 'IDLE';
             } else {
                 claw.x += (dx / dist) * pullSpeed;
                 claw.y += (dy / dist) * pullSpeed;
-                
+
                 if (claw.grabbedItem) {
                     claw.grabbedItem.x = claw.x;
                     claw.grabbedItem.y = claw.y;
@@ -462,19 +462,19 @@ const Game = {
         }
         const ctx = this.ctx;
         ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-        
+
         // 1. Draw Underground Background (layered dirt + details)
         this.drawBackground(ctx);
-        
+
         // 2. Draw ground items
         this.drawItems(ctx);
-        
+
         // 3. Draw Claw (Rope + Claw pincers)
         this.drawClaw(ctx);
-        
+
         // 4. Draw Miner character + Winch platform
         drawMiner(ctx, this.minerState, timestamp);
-        
+
         // 5. Draw Particle systems
         this.drawParticles(ctx);
     },
@@ -492,17 +492,17 @@ const Game = {
             if (this.dynamite > 0) {
                 this.dynamite--;
                 document.getElementById('dynamiteValue').textContent = this.dynamite;
-                
+
                 AudioSynth.playDynamiteSound();
                 AudioSynth.playExplosionSound();
-                
+
                 // Smoke particle burst at claw position
                 this.spawnExplosionParticles(this.claw.x, this.claw.y, 15);
                 this.triggerScreenShake();
-                
+
                 // Score indicator showing destroyed text (optional)
                 this.spawnFloatingScore(this.claw.x, this.claw.y - 20, '💥 BOOM!', 'score-red');
-                
+
                 // Destroy grabbed item
                 this.claw.grabbedItem.destroyed = true;
                 this.claw.grabbedItem = null;
@@ -517,16 +517,16 @@ const Game = {
     triggerTNTGameOver(tntItem) {
         tntItem.destroyed = true;
         AudioSynth.playExplosionSound();
-        
+
         // Big explosion particles
         this.spawnExplosionParticles(tntItem.x, tntItem.y, 50);
         this.triggerScreenShake();
-        
+
         // Destroy adjacent items in 135px radius
         const explosionRadius = 135;
         for (let item of this.items) {
             if (item.destroyed || item === tntItem) continue;
-            
+
             const dist = Math.hypot(item.x - tntItem.x, item.y - tntItem.y);
             if (dist < explosionRadius) {
                 item.destroyed = true;
@@ -534,7 +534,7 @@ const Game = {
                 this.spawnFloatingScore(item.x, item.y - 15, '💥', 'score-red');
             }
         }
-        
+
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = null;
@@ -543,7 +543,7 @@ const Game = {
         this.claw.grabbedItem = null;
         this.state = 'PAUSED';
         this.setMinerState('WORRIED', 3000);
-        
+
         setTimeout(() => {
             this.autoSaveScore();
             this.showOverlay('gameOverOverlay');
@@ -572,7 +572,7 @@ const Game = {
     collectItem(item) {
         try {
             if (item.destroyed) return;
-            
+
             // If item is a rock (ROCK_L or ROCK_S), SKULL, or BONE, deduct money and DO NOT show quiz
             if (item.type.includes('ROCK') || item.type === 'SKULL' || item.type === 'BONE') {
                 const penalty = item.value || 15;
@@ -591,7 +591,7 @@ const Game = {
                 clearInterval(this.timerInterval);
                 this.timerInterval = null;
             }
-            
+
             // Temporarily pause hook oscillation physics while answering the quiz
             this.state = 'PAUSED';
             this.triggerQuiz(item);
@@ -613,7 +613,7 @@ const Game = {
         }
         const continueBtn = document.getElementById('quizContinueBtn');
         if (continueBtn) continueBtn.style.display = 'none';
-        
+
         this.hideOverlay('quizOverlay');
         this.state = 'PLAYING';
         this.resumeTimer();
@@ -622,12 +622,12 @@ const Game = {
     triggerQuiz(item) {
         try {
             console.log("triggerQuiz called for item type:", item.type);
-            
+
             if (this.quizResumeTimeout) {
                 clearTimeout(this.quizResumeTimeout);
                 this.quizResumeTimeout = null;
             }
-            
+
             const continueBtn = document.getElementById('quizContinueBtn');
             if (continueBtn) continueBtn.style.display = 'none';
 
@@ -635,36 +635,36 @@ const Game = {
                 console.log("Questions list empty, loading fallback questions.");
                 this.loadFallbackQuestions();
             }
-            
+
             // Refill unused questions list if empty
             if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
                 console.log("Unused questions list empty, refilling.");
                 this.unusedQuestions = [...this.questions];
             }
-            
+
             if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
                 this.loadFallbackQuestions();
             }
-            
+
             // Select random question from unused questions
             const randIdx = Math.floor(Math.random() * this.unusedQuestions.length);
             const q = this.unusedQuestions[randIdx];
             this.currentQuestion = q;
-            
+
             // Remove question from list so it doesn't repeat
             this.unusedQuestions.splice(randIdx, 1);
-            
+
             const label = ITEM_TYPES[item.type] ? ITEM_TYPES[item.type].label : item.type;
             const quizItemSummaryEl = document.getElementById('quizItemSummary');
             if (quizItemSummaryEl) {
                 quizItemSummaryEl.innerHTML = `กำลังขุด: <strong style="color: #ffea00;">${label}</strong> (มูลค่า: <strong style="color: #ffea00;">$${item.value}</strong>)`;
             }
-            
+
             const quizQuestionTextEl = document.getElementById('quizQuestionText');
             if (quizQuestionTextEl) {
                 quizQuestionTextEl.textContent = q.question;
             }
-            
+
             const container = document.getElementById('quizChoicesContainer');
             if (container) {
                 container.innerHTML = '';
@@ -678,13 +678,13 @@ const Game = {
                     });
                 }
             }
-            
+
             const fb = document.getElementById('quizFeedbackPanel');
             if (fb) {
                 fb.style.display = 'none';
                 fb.className = '';
             }
-            
+
             // Setup 10-second Quiz Countdown Timer
             if (this.quizTimerInterval) {
                 clearInterval(this.quizTimerInterval);
@@ -693,11 +693,11 @@ const Game = {
 
             const totalQuizTime = (typeof TimeStampManager !== 'undefined' && TimeStampManager.quizTimeLimit) ? TimeStampManager.quizTimeLimit : 10;
             this.quizStartTime = Date.now();
-            
+
             const timerValEl = document.getElementById('quizTimerValue');
             const timerBarEl = document.getElementById('quizTimerBar');
             const timerBadgeEl = document.getElementById('quizTimerBadge');
-            
+
             if (timerValEl) timerValEl.textContent = totalQuizTime;
             if (timerBarEl) {
                 timerBarEl.style.width = '100%';
@@ -713,7 +713,7 @@ const Game = {
                     const elapsed = (Date.now() - this.quizStartTime) / 1000;
                     const remaining = Math.max(0, totalQuizTime - elapsed);
                     const remainingSec = Math.ceil(remaining);
-                    
+
                     if (timerValEl) timerValEl.textContent = remainingSec;
                     if (timerBarEl) {
                         const percent = (remaining / totalQuizTime) * 100;
@@ -813,12 +813,12 @@ const Game = {
             }
             const isCorrect = selectedOption === q.answer;
             const timeSpent = this.quizStartTime ? (Date.now() - this.quizStartTime) / 1000 : 0;
-            
+
             // Log timestamp event
             if (typeof TimeStampManager !== 'undefined') {
                 TimeStampManager.logQuizEvent(q.question, selectedOption, q.answer, isCorrect, timeSpent);
             }
-            
+
             // Disable choices and highlight correct option (เฉลย)
             const buttons = document.querySelectorAll('.btn-choice');
             buttons.forEach(btn => {
@@ -833,20 +833,20 @@ const Game = {
                     btn.innerHTML = `${selectedOption} <span style="color: #ff3b30; font-weight: bold; margin-left: 8px;">❌</span>`;
                 }
             });
-            
+
             const fb = document.getElementById('quizFeedbackPanel');
             if (fb) {
                 fb.style.display = 'block';
             }
-            
+
             const continueBtn = document.getElementById('quizContinueBtn');
             if (continueBtn) {
                 continueBtn.style.display = 'block';
             }
-            
+
             let finalVal = item.value;
             let scoreClass = 'score-yellow';
-            
+
             if (item.type.includes('ROCK') && this.hasRockBook) {
                 finalVal *= 3;
                 scoreClass = 'score-green';
@@ -855,12 +855,12 @@ const Game = {
                 finalVal = Math.floor(finalVal * 1.5);
                 scoreClass = 'score-green';
             }
-            
+
             if (isCorrect) {
                 if (fb) {
                     fb.className = 'feedback-correct';
                 }
-                
+
                 if (item.type === 'MYSTERY_BAG') {
                     AudioSynth.playBagSound();
                     const roll = Math.random();
@@ -888,28 +888,28 @@ const Game = {
                     } else {
                         AudioSynth.playGoldSound(item.weight);
                     }
-                    
+
                     const reward = finalVal + 50; // $50 bonus for correct
                     this.cash += reward;
                     if (fb) fb.textContent = `ตอบถูก! ได้รับเงิน $${finalVal} + โบนัสภาษาอังกฤษ $50! 🌟`;
                     this.spawnFloatingScore(item.x, item.y - 25, `+$${reward}`, 'score-green');
                 }
-                
+
                 this.setMinerState('HAPPY', 1500);
             } else {
                 if (fb) {
                     fb.className = 'feedback-incorrect';
                     fb.innerHTML = `Incorrect! เฉลยข้อที่ถูกต้องคือ: <strong style="color: #ffea00;">"${q.answer}"</strong> 😢`;
                 }
-                
+
                 AudioSynth.playGrabSound(); // play buzzer
                 this.spawnFloatingScore(item.x, item.y - 25, `$0 Lost!`, 'score-red');
                 this.setMinerState('WORRIED', 1500);
             }
-            
+
             item.destroyed = true;
             this.updateHUD();
-            
+
             const goldCleared = this.checkGoldCleared();
             if (!goldCleared) {
                 // Auto resume after brief readable delay (1.2s for correct, 2.0s for incorrect)
@@ -942,13 +942,13 @@ const Game = {
         const div = document.createElement('div');
         div.className = `floating-score ${cssClass}`;
         div.textContent = text;
-        
+
         // Translate coords because layer is absolute in gameContainer
         div.style.left = `${x}px`;
         div.style.top = `${y}px`;
-        
+
         this.floatingLayer.appendChild(div);
-        
+
         setTimeout(() => {
             div.remove();
         }, 1200);
@@ -1003,11 +1003,11 @@ const Game = {
             p.vy += p.gravity || 0;
             p.angle += p.spin || 0;
             p.alpha -= p.decay;
-            
+
             if (p.type === 'smoke') {
                 p.size += 0.4; // smoke expands
             }
-            
+
             if (p.alpha <= 0) {
                 this.particles.splice(i, 1);
             }
@@ -1020,7 +1020,7 @@ const Game = {
             ctx.globalAlpha = p.alpha;
             ctx.fillStyle = p.color;
             ctx.strokeStyle = p.color;
-            
+
             if (p.type === 'smoke') {
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
@@ -1051,7 +1051,7 @@ const Game = {
         if (typeof AudioSynth !== 'undefined') {
             AudioSynth.startMusic();
         }
-        
+
         // Ensure name is saved immediately when starting
         const startInput = document.getElementById('playerNameInputStart');
         if (startInput) {
@@ -1060,25 +1060,25 @@ const Game = {
                 localStorage.setItem('goldminer_player_name', name);
             }
         }
-        
+
         this.startFromLevel(1);
     },
 
     startFromLevel(lvl) {
         AudioSynth.init();
-        
+
         this.cash = 0;
         this.level = lvl;
         // Give dynamite if starting from higher checkpoint
         this.dynamite = (lvl > 1) ? (lvl - 1) * 2 : 0;
         this.targetScore = this.calculateTargetScore(lvl);
-        
+
         // Reset inventory
         this.resetLevelUpgrades();
-        
+
         // Reset unused questions list for a new game session
         this.unusedQuestions = [...this.questions];
-        
+
         this.hideAllOverlays();
         this.startLevel();
     },
@@ -1090,13 +1090,13 @@ const Game = {
         this.claw.length = this.claw.minLength;
         this.claw.grabbedItem = null;
         this.minerState = 'IDLE';
-        
+
         this.generateItems();
         this.particles = [];
-        
+
         this.updateHUD();
         this.state = 'PLAYING';
-        
+
         this.resumeTimer();
     },
 
@@ -1106,7 +1106,7 @@ const Game = {
             if (this.state === 'PLAYING') {
                 this.timeLeft--;
                 document.getElementById('timeValue').textContent = this.timeLeft;
-                
+
                 // Danger flashing
                 const timerBox = document.getElementById('timerBox');
                 if (this.timeLeft <= 10) {
@@ -1125,13 +1125,13 @@ const Game = {
 
     endLevel() {
         this.state = 'PAUSED';
-        
+
         if (this.cash >= this.targetScore) {
             if (this.level === 3) {
                 // Game Completed!
                 this.autoSaveScore();
                 this.showOverlay('gameOverOverlay');
-                
+
                 const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
                 if (titleEl) {
                     titleEl.textContent = 'ยินดีด้วย! คุณผ่านครบทุกด่านแล้ว 🎉';
@@ -1142,7 +1142,7 @@ const Game = {
                     reasonEl.textContent = 'คุณขุดทองสำเร็จครบทั้ง 3 ด่านเรียบร้อยแล้ว!';
                 }
                 document.getElementById('finalScore').textContent = this.cash;
-                
+
                 const savedName = localStorage.getItem('goldminer_player_name') || '';
                 document.getElementById('playerNameInput').value = savedName;
             } else {
@@ -1150,7 +1150,7 @@ const Game = {
                 if (typeof CheckpointManager !== 'undefined') {
                     CheckpointManager.unlockLevel(this.level + 1);
                 }
-                
+
                 // Change the button text based on whether there's a minigame transition (only for Level 1 -> 2)
                 const goShopBtn = document.getElementById('goShopBtn');
                 if (goShopBtn) {
@@ -1160,7 +1160,7 @@ const Game = {
                         goShopBtn.innerHTML = 'ไปยังร้านค้า 🛒';
                     }
                 }
-                
+
                 this.showOverlay('nextLevelOverlay');
                 document.getElementById('transitionCash').textContent = this.cash;
                 document.getElementById('transitionTarget').textContent = this.targetScore;
@@ -1169,17 +1169,17 @@ const Game = {
             // Failed to reach goal!
             this.autoSaveScore();
             this.showOverlay('gameOverOverlay');
-            
+
             const titleEl = document.querySelector('#gameOverOverlay .overlay-title');
             if (titleEl) {
                 titleEl.textContent = 'GAME OVER';
                 titleEl.style.color = '#ff3b30';
             }
             document.getElementById('finalScore').textContent = this.cash;
-            
+
             const savedName = localStorage.getItem('goldminer_player_name') || '';
             document.getElementById('playerNameInput').value = savedName;
-            
+
             // Check if high score
             const minScore = this.highScores.length >= 5 ? this.highScores[this.highScores.length - 1].score : 0;
             const isNewHighScore = this.cash > minScore || this.highScores.length < 5;
@@ -1191,28 +1191,28 @@ const Game = {
         this.resetLevelUpgrades();
         this.hideAllOverlays();
         this.state = 'SHOP';
-        
+
         document.getElementById('shopCashValue').textContent = this.cash;
-        
+
         const nextLevelNum = this.level + 1;
         // Target calculation: e.g. L1:650, L2:1500, L3:2500, L4:3750, L5:5150
         const nextGoal = this.calculateTargetScore(nextLevelNum);
         document.getElementById('shopNextGoal').textContent = nextGoal;
-        
+
         // Generate shop items list
         this.generateShopItems();
         this.renderShop();
-        
+
         this.showOverlay('shopOverlay');
     },
 
     startNextLevel() {
         this.level++;
         this.targetScore = this.calculateTargetScore(this.level);
-        
+
         // Keep strength/clover/polish active for ONE level, reset flags that expire.
         // The flags will be applied, then reset at the end of the next level or during next shop.
-        
+
         this.hideAllOverlays();
         this.startLevel();
     },
@@ -1266,12 +1266,12 @@ const Game = {
             try {
                 this.highScores = JSON.parse(stored);
                 // Remove previous default/mock scores
-                this.highScores = this.highScores.filter(e => 
-                    e.name !== 'Old Miner' && 
-                    e.name !== 'Sourdough' && 
-                    e.name !== 'Diggy' && 
-                    e.name !== 'นักขุดรุ่นเก๋า' && 
-                    e.name !== 'เซียนขุดทอง' && 
+                this.highScores = this.highScores.filter(e =>
+                    e.name !== 'Old Miner' &&
+                    e.name !== 'Sourdough' &&
+                    e.name !== 'Diggy' &&
+                    e.name !== 'นักขุดรุ่นเก๋า' &&
+                    e.name !== 'เซียนขุดทอง' &&
                     e.name !== 'นักขุดจิ๋ว'
                 );
                 this.saveHighScoresToStorage();
@@ -1293,7 +1293,7 @@ const Game = {
         // Read directly from the start screen input first
         const startInput = document.getElementById('playerNameInputStart');
         let name = startInput ? startInput.value.trim() : '';
-        
+
         // If empty, fall back to localStorage
         if (!name) {
             name = localStorage.getItem('goldminer_player_name');
@@ -1301,11 +1301,11 @@ const Game = {
             // Update localStorage with the latest name
             localStorage.setItem('goldminer_player_name', name);
         }
-        
+
         if (!name) {
             name = 'คนขุดทอง'; // Default name
         }
-        
+
         let customPhoto = null;
         if (typeof minerPhoto !== 'undefined' && minerPhoto.src && minerPhoto.src.length > 0) {
             customPhoto = minerPhoto.src;
@@ -1320,7 +1320,7 @@ const Game = {
             photo: customPhoto || null,
             date: new Date().toISOString().split('T')[0]
         };
-        
+
         let existingIndex = this.highScores.findIndex(e => e.name === name);
         if (existingIndex !== -1) {
             // Update if score is higher
@@ -1333,10 +1333,10 @@ const Game = {
         } else {
             this.highScores.push(record);
         }
-        
+
         this.highScores.sort((a, b) => b.score - a.score);
         this.highScores = this.highScores.slice(0, 5);
-        
+
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
     },
@@ -1344,7 +1344,7 @@ const Game = {
     saveCurrentScore() {
         const nameInput = document.getElementById('playerNameInput');
         const name = nameInput.value.trim() || 'ผู้เล่นนิรนาม';
-        
+
         // Save current captured face photo Data URL
         let customPhoto = null;
         if (typeof minerPhoto !== 'undefined' && minerPhoto.src && minerPhoto.src.length > 0) {
@@ -1360,16 +1360,16 @@ const Game = {
             photo: customPhoto || null,
             date: new Date().toISOString().split('T')[0]
         };
-        
+
         this.highScores.push(record);
         // Sort descending
         this.highScores.sort((a, b) => b.score - a.score);
         // Keep top 5
         this.highScores = this.highScores.slice(0, 5);
-        
+
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
-        
+
         // Disable input and show saved status
         nameInput.disabled = true;
         const saveBtn = document.getElementById('saveScoreBtn');
@@ -1381,7 +1381,7 @@ const Game = {
         const container = document.getElementById('highScoresContainer');
         if (!container) return;
         container.innerHTML = '';
-        
+
         if (!this.highScores || this.highScores.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; color: #a3958c; padding: 24px 10px; font-size: 14px; line-height: 1.6;">
@@ -1396,7 +1396,7 @@ const Game = {
         this.highScores.forEach((entry, i) => {
             const div = document.createElement('div');
             div.className = 'high-score-item';
-            
+
             const photoSrc = entry.photo || 'miner.png';
             const avatarHtml = `<img src="${photoSrc}" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid #ffea00; object-fit: cover; background: #222;" onerror="this.src='miner.png'">`;
 
@@ -1428,17 +1428,17 @@ const Game = {
         this.shopItems = itemsList.map(item => {
             const factor = 0.8 + Math.random() * 0.5;
             let finalPrice = Math.round(item.price * factor);
-            
+
             // Limit minimum prices
             finalPrice = Math.max(finalPrice, 40);
-            
+
             return {
                 ...item,
                 price: finalPrice,
                 soldOut: false
             };
         });
-        
+
         // Randomly make 1 item "Sold Out" from start to simulate real shop stock!
         if (Math.random() < 0.4) {
             const randIdx = Math.floor(Math.random() * this.shopItems.length);
@@ -1452,22 +1452,22 @@ const Game = {
     renderShop() {
         const grid = document.getElementById('shopItemsGrid');
         grid.innerHTML = '';
-        
+
         this.shopItems.forEach((item) => {
             const card = document.createElement('div');
             card.className = `shop-card ${item.soldOut ? 'sold-out' : ''}`;
-            
+
             let isAffordable = this.cash >= item.price;
             let buttonText = 'ซื้อ';
-            
+
             // Check if player already bought this (except dynamite)
             if (item.id === 'strength' && this.hasStrengthDrink) buttonText = 'มีแล้ว';
             if (item.id === 'clover' && this.hasClover) buttonText = 'มีแล้ว';
             if (item.id === 'rockbook' && this.hasRockBook) buttonText = 'มีแล้ว';
             if (item.id === 'polish' && this.hasDiamondPolish) buttonText = 'มีแล้ว';
-            
+
             const btnDisabled = item.soldOut || !isAffordable || buttonText === 'มีแล้ว';
-            
+
             card.innerHTML = `
                 <div class="shop-item-icon">${item.icon}</div>
                 <div class="shop-item-name">${item.name}</div>
@@ -1477,7 +1477,7 @@ const Game = {
                     ${buttonText}
                 </button>
             `;
-            
+
             grid.appendChild(card);
         });
     },
@@ -1486,7 +1486,7 @@ const Game = {
         if (this.cash >= price) {
             this.cash -= price;
             AudioSynth.playBuySound();
-            
+
             if (id === 'dynamite') {
                 this.dynamite++;
                 document.getElementById('dynamiteValue').textContent = this.dynamite;
@@ -1495,12 +1495,12 @@ const Game = {
                 if (id === 'clover') this.hasClover = true;
                 if (id === 'rockbook') this.hasRockBook = true;
                 if (id === 'polish') this.hasDiamondPolish = true;
-                
+
                 // Mark item as sold out in our list
                 const shopItem = this.shopItems.find(i => i.id === id);
                 if (shopItem) shopItem.soldOut = true;
             }
-            
+
             // Re-render shop
             document.getElementById('shopCashValue').textContent = this.cash;
             this.updateHUD();
@@ -1511,10 +1511,10 @@ const Game = {
     // --- PROCEDURAL LEVEL GENERATION ---
     generateItems() {
         this.items = [];
-        
+
         // Standard item density based on level
         const levelFactor = this.level;
-        
+
         // Spawn categories counts
         const counts = {
             GOLD_L: 1 + (Math.random() < 0.4 ? 1 : 0),
@@ -1539,7 +1539,7 @@ const Game = {
         for (let type in counts) {
             const qty = counts[type];
             const def = ITEM_TYPES[type];
-            
+
             for (let i = 0; i < qty; i++) {
                 this.spawnSingleItem(type, def);
             }
@@ -1549,18 +1549,18 @@ const Game = {
     spawnSingleItem(type, def) {
         let attempts = 0;
         let spawned = false;
-        
+
         while (attempts < 60 && !spawned) {
             attempts++;
             // Layout dimensions:
             // x: 40 to 920, y: 190 to 560
             const x = 40 + Math.random() * (GAME_WIDTH - 80);
             const y = 190 + Math.random() * (GAME_HEIGHT - 240);
-            
+
             // Check distance from winch origin to prevent item spawning right on claw
             const distFromOrigin = Math.hypot(x - this.claw.originX, y - this.claw.originY);
             if (distFromOrigin < 150) continue;
-            
+
             // Check overlapping with existing items
             let overlap = false;
             for (let other of this.items) {
@@ -1570,7 +1570,7 @@ const Game = {
                     break;
                 }
             }
-            
+
             if (!overlap) {
                 // Initialize Item values
                 const item = {
@@ -1584,7 +1584,7 @@ const Game = {
                     destroyed: false,
                     angle: Math.random() * Math.PI * 2
                 };
-                
+
                 // Specific item initializers
                 if (type.includes('GOLD') || type.includes('ROCK')) {
                     // pre-generate vertex bumpy offsets so shape is consistent
@@ -1594,7 +1594,7 @@ const Game = {
                         // Max variation 15% of radius
                         item.points.push((Math.random() - 0.5) * def.radius * 0.3);
                     }
-                    
+
                     // Shading colors
                     if (type.includes('GOLD')) {
                         item.color = type.includes('L') ? '#e5a93b' : '#ffea00';
@@ -1602,7 +1602,7 @@ const Game = {
                         item.color = Math.random() < 0.5 ? '#8d99ae' : '#7f5539';
                     }
                 }
-                
+
                 if (type === 'GOPHER') {
                     // Moves horizontally
                     item.vx = (0.5 + Math.random() * 1.5) * (Math.random() < 0.5 ? 1 : -1);
@@ -1614,7 +1614,7 @@ const Game = {
                         item.vx *= 1.25; // Scurries faster!
                     }
                 }
-                
+
                 this.items.push(item);
                 spawned = true;
             }
@@ -1659,7 +1659,7 @@ const Game = {
         skyGrad.addColorStop(1, '#ffbf69');
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, GAME_WIDTH, DIRT_START_Y);
-        
+
         // Draw some distant mountains in the background
         ctx.fillStyle = '#cc5a01';
         ctx.beginPath();
@@ -1676,7 +1676,7 @@ const Game = {
         // 2. Ledge / Ground separator line
         ctx.fillStyle = '#8f4f1e';
         ctx.fillRect(0, DIRT_START_Y - 8, GAME_WIDTH, 8);
-        
+
         // 3. Underground Area (Deep Dirt)
         // Draw layers of brown dirt
         const dirtGrad = ctx.createLinearGradient(0, DIRT_START_Y, 0, GAME_HEIGHT);
@@ -1685,7 +1685,7 @@ const Game = {
         dirtGrad.addColorStop(1, '#331800'); // bottom-most dark brown
         ctx.fillStyle = dirtGrad;
         ctx.fillRect(0, DIRT_START_Y, GAME_WIDTH, GAME_HEIGHT - DIRT_START_Y);
-        
+
         // Draw wavy lines to represent soil strata
         ctx.strokeStyle = '#2d1500';
         ctx.lineWidth = 4;
@@ -1698,7 +1698,7 @@ const Game = {
         ctx.moveTo(0, 400);
         ctx.bezierCurveTo(300, 370, 600, 450, 960, 390);
         ctx.stroke();
-        
+
         // Draw little pebbles/spots in the dirt for texture
         ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
         for (let i = 0; i < 40; i++) {
@@ -1715,7 +1715,7 @@ const Game = {
     drawItems(ctx) {
         for (let item of this.items) {
             if (item.destroyed) continue;
-            
+
             // Draw diamond sparkles & gold glimmers
             if (!item.grabbed) {
                 if (item.type === 'DIAMOND') {
@@ -1726,9 +1726,9 @@ const Game = {
             }
 
             const r = item.radius;
-            
+
             ctx.save();
-            
+
             if (item.type.includes('GOLD')) {
                 // Irregular gold polygonal path
                 ctx.beginPath();
@@ -1741,9 +1741,9 @@ const Game = {
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
-                
+
                 // Shiny gold gradient shading
-                const grad = ctx.createRadialGradient(item.x - r*0.3, item.y - r*0.3, r*0.1, item.x, item.y, r);
+                const grad = ctx.createRadialGradient(item.x - r * 0.3, item.y - r * 0.3, r * 0.1, item.x, item.y, r);
                 grad.addColorStop(0, '#fff3a8');
                 grad.addColorStop(0.3, item.color);
                 grad.addColorStop(1, '#8f5c00');
@@ -1765,8 +1765,8 @@ const Game = {
                     else ctx.lineTo(px, py);
                 }
                 ctx.closePath();
-                
-                const grad = ctx.createRadialGradient(item.x - r*0.3, item.y - r*0.3, r*0.1, item.x, item.y, r);
+
+                const grad = ctx.createRadialGradient(item.x - r * 0.3, item.y - r * 0.3, r * 0.1, item.x, item.y, r);
                 grad.addColorStop(0, '#dedede');
                 grad.addColorStop(0.4, item.color);
                 grad.addColorStop(1, '#3a3a3a');
@@ -1775,7 +1775,7 @@ const Game = {
                 ctx.strokeStyle = '#242424';
                 ctx.lineWidth = 2.5;
                 ctx.stroke();
-                
+
                 // Draw cracked lines on the rock
                 ctx.strokeStyle = '#222';
                 ctx.lineWidth = 1.5;
@@ -1795,7 +1795,7 @@ const Game = {
                 ctx.lineTo(item.x - r * 0.5, item.y + r);
                 ctx.lineTo(item.x - r, item.y - r * 0.3);
                 ctx.closePath();
-                
+
                 const grad = ctx.createLinearGradient(item.x - r, item.y - r, item.x + r, item.y + r);
                 grad.addColorStop(0, '#ffffff');
                 grad.addColorStop(0.3, '#38bdf8');
@@ -1805,7 +1805,7 @@ const Game = {
                 ctx.strokeStyle = '#e0f2fe';
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
-                
+
                 // draw diamond facets lines
                 ctx.beginPath();
                 ctx.moveTo(item.x - r, item.y - r * 0.3);
@@ -1824,7 +1824,7 @@ const Game = {
                 // Bag base
                 ctx.beginPath();
                 ctx.arc(item.x, item.y + r * 0.25, r * 0.8, 0, Math.PI * 2);
-                const grad = ctx.createRadialGradient(item.x - r*0.3, item.y, r*0.1, item.x, item.y, r);
+                const grad = ctx.createRadialGradient(item.x - r * 0.3, item.y, r * 0.1, item.x, item.y, r);
                 grad.addColorStop(0, '#f9c74f');
                 grad.addColorStop(1, '#b07d0d');
                 ctx.fillStyle = grad;
@@ -1832,7 +1832,7 @@ const Game = {
                 ctx.strokeStyle = '#5f4304';
                 ctx.lineWidth = 2.5;
                 ctx.stroke();
-                
+
                 // Sack tied top ruffle
                 ctx.beginPath();
                 ctx.moveTo(item.x - r * 0.5, item.y - r * 0.35);
@@ -1843,13 +1843,13 @@ const Game = {
                 ctx.fillStyle = '#d4a373';
                 ctx.fill();
                 ctx.stroke();
-                
+
                 // Knot rope
                 ctx.beginPath();
                 ctx.ellipse(item.x, item.y - r * 0.2, r * 0.4, r * 0.1, 0, 0, Math.PI * 2);
                 ctx.fillStyle = '#ff3b30';
                 ctx.fill();
-                
+
                 // Draw Red '?'
                 ctx.font = `bold ${r * 1.15}px Fredoka`;
                 ctx.fillStyle = '#e63946';
@@ -1861,7 +1861,7 @@ const Game = {
                 // Wooden explosives barrel
                 ctx.beginPath();
                 ctx.ellipse(item.x, item.y, r * 0.85, r, 0, 0, Math.PI * 2);
-                const grad = ctx.createRadialGradient(item.x - r*0.2, item.y, r*0.1, item.x, item.y, r);
+                const grad = ctx.createRadialGradient(item.x - r * 0.2, item.y, r * 0.1, item.x, item.y, r);
                 grad.addColorStop(0, '#f26419'); // fiery red-orange
                 grad.addColorStop(1, '#861e08'); // dark crimson
                 ctx.fillStyle = grad;
@@ -1869,7 +1869,7 @@ const Game = {
                 ctx.strokeStyle = '#470a00';
                 ctx.lineWidth = 2.5;
                 ctx.stroke();
-                
+
                 // Black iron metal bands
                 ctx.strokeStyle = '#1e1e1e';
                 ctx.lineWidth = 3.5;
@@ -1879,7 +1879,7 @@ const Game = {
                 ctx.moveTo(item.x - r * 0.78, item.y + r * 0.5);
                 ctx.lineTo(item.x + r * 0.78, item.y + r * 0.5);
                 ctx.stroke();
-                
+
                 // TNT letters
                 ctx.font = `bold ${r * 0.7}px Arial Black, sans-serif`;
                 ctx.fillStyle = '#ffffff';
@@ -1893,58 +1893,58 @@ const Game = {
             else if (item.type === 'BONE') {
                 ctx.translate(item.x, item.y);
                 ctx.rotate(item.angle);
-                
+
                 ctx.fillStyle = '#f5ebe0';
                 ctx.strokeStyle = '#d5bdaf';
                 ctx.lineWidth = 2;
-                
+
                 // Shaft
-                ctx.fillRect(-r*0.7, -r*0.25, r*1.4, r*0.5);
-                ctx.strokeRect(-r*0.7, -r*0.25, r*1.4, r*0.5);
+                ctx.fillRect(-r * 0.7, -r * 0.25, r * 1.4, r * 0.5);
+                ctx.strokeRect(-r * 0.7, -r * 0.25, r * 1.4, r * 0.5);
                 // Ends
                 ctx.beginPath();
-                ctx.arc(-r*0.7, -r*0.2, r*0.35, 0, Math.PI*2);
-                ctx.arc(-r*0.7, r*0.2, r*0.35, 0, Math.PI*2);
-                ctx.arc(r*0.7, -r*0.2, r*0.35, 0, Math.PI*2);
-                ctx.arc(r*0.7, r*0.2, r*0.35, 0, Math.PI*2);
+                ctx.arc(-r * 0.7, -r * 0.2, r * 0.35, 0, Math.PI * 2);
+                ctx.arc(-r * 0.7, r * 0.2, r * 0.35, 0, Math.PI * 2);
+                ctx.arc(r * 0.7, -r * 0.2, r * 0.35, 0, Math.PI * 2);
+                ctx.arc(r * 0.7, r * 0.2, r * 0.35, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
             }
             else if (item.type === 'SKULL') {
                 ctx.translate(item.x, item.y);
-                
+
                 ctx.fillStyle = '#f4f3ee';
                 ctx.strokeStyle = '#bcb8b1';
                 ctx.lineWidth = 2.5;
-                
+
                 // Bulbous cranium
                 ctx.beginPath();
-                ctx.arc(0, -r*0.15, r*0.75, 0, Math.PI*2);
+                ctx.arc(0, -r * 0.15, r * 0.75, 0, Math.PI * 2);
                 // Jaw structure
-                ctx.rect(-r*0.35, r*0.4, r*0.7, r*0.45);
+                ctx.rect(-r * 0.35, r * 0.4, r * 0.7, r * 0.45);
                 ctx.fill();
                 ctx.stroke();
-                
+
                 // Teeth slits
                 ctx.beginPath();
-                ctx.moveTo(-r*0.15, r*0.55); ctx.lineTo(-r*0.15, r*0.8);
-                ctx.moveTo(0, r*0.55); ctx.lineTo(0, r*0.8);
-                ctx.moveTo(r*0.15, r*0.55); ctx.lineTo(r*0.15, r*0.8);
+                ctx.moveTo(-r * 0.15, r * 0.55); ctx.lineTo(-r * 0.15, r * 0.8);
+                ctx.moveTo(0, r * 0.55); ctx.lineTo(0, r * 0.8);
+                ctx.moveTo(r * 0.15, r * 0.55); ctx.lineTo(r * 0.15, r * 0.8);
                 ctx.strokeStyle = '#8a817c';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-                
+
                 // Eyes & nasal cavities
                 ctx.beginPath();
-                ctx.arc(-r*0.22, -r*0.08, r*0.18, 0, Math.PI*2);
-                ctx.arc(r*0.22, -r*0.08, r*0.18, 0, Math.PI*2);
+                ctx.arc(-r * 0.22, -r * 0.08, r * 0.18, 0, Math.PI * 2);
+                ctx.arc(r * 0.22, -r * 0.08, r * 0.18, 0, Math.PI * 2);
                 ctx.fillStyle = '#1e1e24';
                 ctx.fill();
-                
+
                 ctx.beginPath();
-                ctx.moveTo(0, r*0.12);
-                ctx.lineTo(-r*0.08, r*0.25);
-                ctx.lineTo(r*0.08, r*0.25);
+                ctx.moveTo(0, r * 0.12);
+                ctx.lineTo(-r * 0.08, r * 0.25);
+                ctx.lineTo(r * 0.08, r * 0.25);
                 ctx.closePath();
                 ctx.fillStyle = '#1e1e24';
                 ctx.fill();
@@ -1952,61 +1952,61 @@ const Game = {
             else if (item.type === 'GOPHER') {
                 ctx.translate(item.x, item.y);
                 if (item.vx < 0) ctx.scale(-1, 1); // Flip direction
-                
+
                 ctx.fillStyle = '#a06a42';
                 ctx.strokeStyle = '#6f482b';
                 ctx.lineWidth = 2;
-                
+
                 // Body
                 ctx.beginPath();
                 ctx.ellipse(0, 0, r * 1.2, r * 0.9, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
-                
+
                 // Cream belly
                 ctx.beginPath();
                 ctx.ellipse(r * 0.15, r * 0.15, r * 0.65, r * 0.48, 0, 0, Math.PI * 2);
                 ctx.fillStyle = '#e3c099';
                 ctx.fill();
-                
+
                 // Head
                 ctx.beginPath();
                 ctx.arc(r * 0.7, -r * 0.35, r * 0.58, 0, Math.PI * 2);
                 ctx.fillStyle = '#a06a42';
                 ctx.fill();
                 ctx.stroke();
-                
+
                 // Snout & Cheek
                 ctx.beginPath();
                 ctx.arc(r * 1.05, -r * 0.3, r * 0.12, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffcad4';
                 ctx.fill();
-                
+
                 // Ears
                 ctx.beginPath();
                 ctx.arc(r * 0.42, -r * 0.88, r * 0.22, 0, Math.PI * 2);
                 ctx.fillStyle = '#6f482b';
                 ctx.fill();
-                
+
                 // Eye
                 ctx.beginPath();
                 ctx.arc(r * 0.78, -r * 0.45, r * 0.08, 0, Math.PI * 2);
                 ctx.fillStyle = '#000000';
                 ctx.fill();
-                
+
                 // Feet (simple circles)
                 ctx.fillStyle = '#7a4e2d';
                 ctx.beginPath();
-                ctx.arc(-r*0.6, r*0.8, r*0.25, 0, Math.PI*2);
-                ctx.arc(r*0.4, r*0.8, r*0.25, 0, Math.PI*2);
+                ctx.arc(-r * 0.6, r * 0.8, r * 0.25, 0, Math.PI * 2);
+                ctx.arc(r * 0.4, r * 0.8, r * 0.25, 0, Math.PI * 2);
                 ctx.fill();
-                
+
                 // Carry item logic
                 if (item.hasDiamond) {
                     ctx.save();
                     ctx.translate(0, -r * 1.15);
                     ctx.scale(0.7, 0.7);
-                    
+
                     const dr = 12;
                     ctx.beginPath();
                     ctx.moveTo(0, -dr);
@@ -2015,7 +2015,7 @@ const Game = {
                     ctx.lineTo(-dr * 0.5, dr);
                     ctx.lineTo(-dr, -dr * 0.3);
                     ctx.closePath();
-                    
+
                     const g = ctx.createLinearGradient(-dr, -dr, dr, dr);
                     g.addColorStop(0, '#fff');
                     g.addColorStop(1, '#00f0ff');
@@ -2027,7 +2027,7 @@ const Game = {
                     ctx.restore();
                 }
             }
-            
+
             ctx.restore();
         }
     },
@@ -2037,10 +2037,10 @@ const Game = {
         const oy = this.claw.originY;
         const cx = this.claw.x;
         const cy = this.claw.y;
-        
+
         // Calculate exact angle of rope for synchronized rotation
         const ropeAngle = Math.atan2(cx - ox, cy - oy);
-        
+
         // 1. Draw Cable/Chain
         ctx.strokeStyle = '#555e68';
         ctx.lineWidth = 3.5;
@@ -2048,7 +2048,7 @@ const Game = {
         ctx.moveTo(ox, oy);
         ctx.lineTo(cx, cy);
         ctx.stroke();
-        
+
         // Cable highlight (metallic shine)
         ctx.strokeStyle = '#8a939e';
         ctx.lineWidth = 1.5;
@@ -2058,16 +2058,16 @@ const Game = {
         ctx.lineTo(cx, cy);
         ctx.stroke();
         ctx.setLineDash([]); // Reset
-        
+
         // 2. Draw Mining Drill head
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(ropeAngle);
-        
+
         const isDrilling = this.claw.state === 'SHOOT';
         const isHolding = this.claw.state === 'RETRACT' && this.claw.grabbedItem;
         const drillTime = Date.now() / 1000;
-        
+
         // --- Drill Motor Housing (top block) ---
         // Main housing body
         const motorGrad = ctx.createLinearGradient(-10, -12, 10, -12);
@@ -2079,7 +2079,7 @@ const Game = {
         ctx.fillStyle = motorGrad;
         ctx.strokeStyle = '#343a40';
         ctx.lineWidth = 2;
-        
+
         // Rounded motor block
         ctx.beginPath();
         ctx.moveTo(-9, -10);
@@ -2089,7 +2089,7 @@ const Game = {
         ctx.arc(0, -10, 9, 0, Math.PI, true);
         ctx.fill();
         ctx.stroke();
-        
+
         // Motor housing accent lines
         ctx.strokeStyle = '#495057';
         ctx.lineWidth = 1;
@@ -2099,7 +2099,7 @@ const Game = {
         ctx.moveTo(-6, 0);
         ctx.lineTo(6, 0);
         ctx.stroke();
-        
+
         // Warning stripe band (yellow/black)
         ctx.fillStyle = '#ffb703';
         ctx.fillRect(-9, 2, 18, 4);
@@ -2107,11 +2107,11 @@ const Game = {
         ctx.fillRect(-9, 2, 4, 4);
         ctx.fillRect(-1, 2, 4, 4);
         ctx.fillRect(7, 2, 4, 4);
-        
+
         // --- Drill Bit (spiral cone) ---
         const drillLength = 22;
         const drillTopWidth = 7;
-        
+
         // Drill bit metallic body
         const bitGrad = ctx.createLinearGradient(-drillTopWidth, 6, drillTopWidth, 6);
         bitGrad.addColorStop(0, '#868e96');
@@ -2119,11 +2119,11 @@ const Game = {
         bitGrad.addColorStop(0.5, '#e9ecef');
         bitGrad.addColorStop(0.8, '#ced4da');
         bitGrad.addColorStop(1, '#868e96');
-        
+
         ctx.fillStyle = bitGrad;
         ctx.strokeStyle = '#495057';
         ctx.lineWidth = 1.5;
-        
+
         // Tapered drill cone shape
         ctx.beginPath();
         ctx.moveTo(-drillTopWidth, 6);
@@ -2134,7 +2134,7 @@ const Game = {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        
+
         // Spiral grooves on drill bit (animated when drilling)
         ctx.strokeStyle = '#495057';
         ctx.lineWidth = 1.2;
@@ -2149,7 +2149,7 @@ const Game = {
             ctx.quadraticCurveTo(0, yPos + 2, halfW, yPos);
             ctx.stroke();
         }
-        
+
         // Glowing drill tip when actively drilling
         if (isDrilling) {
             const glowIntensity = 0.4 + 0.3 * Math.sin(drillTime * 12);
@@ -2161,7 +2161,7 @@ const Game = {
             ctx.fill();
             ctx.shadowBlur = 0;
         }
-        
+
         // Spark particles when holding item (retracting with gold)
         if (isHolding) {
             ctx.fillStyle = '#ffea00';
@@ -2177,7 +2177,7 @@ const Game = {
             }
             ctx.globalAlpha = 1.0;
         }
-        
+
         ctx.restore();
     }
 };

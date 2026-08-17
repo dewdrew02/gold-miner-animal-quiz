@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>คนขุดทอง - ปริศนาสัตว์โลกน่ารู้ (Gold Miner)</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛏️</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div id="gameContainer">
         <!-- HUD Layer -->
@@ -21,13 +24,13 @@
                     <span id="goalValue">$650</span>
                 </div>
             </div>
-            
+
             <div class="hud-center">
                 <div class="level-banner">
                     ด่านที่ <span id="levelValue">1</span>
                 </div>
             </div>
-            
+
             <div class="hud-right">
                 <div class="dynamite-container" id="dynamiteBtn" title="กดปุ่ม ลูกศรขึ้น เพื่อใช้ไดนาไมต์">
                     <span class="dynamite-icon">🧨</span>
@@ -43,10 +46,10 @@
 
         <!-- Main Gameplay Canvas -->
         <canvas id="gameCanvas" width="960" height="600"></canvas>
-        
+
         <!-- Interactive Particle Canvas Layer -->
         <canvas id="particleCanvas" width="960" height="600"></canvas>
-        
+
         <!-- Floating Score FX Layer -->
         <div id="floatingScoreLayer"></div>
 
@@ -56,68 +59,90 @@
         <div class="overlay" id="introOverlay">
             <div class="glass-panel" style="max-width: 680px;">
                 <div class="overlay-title" style="font-size: 50px; line-height: 1.1;">GOLD MINER</div>
-                <div class="overlay-subtitle" style="font-size: 24px; color: #ffb703; margin-bottom: 20px;">ปริศนาสัตว์โลกน่ารู้ 🦁</div>
-                
+                <div class="overlay-subtitle" style="font-size: 24px; color: #ffb703; margin-bottom: 20px;">
+                    ปริศนาสัตว์โลกน่ารู้ 🦁</div>
+
                 <p style="color: #e2d4c9; font-size: 17px; line-height: 1.6; margin-bottom: 24px;">
                     ยินดีต้อนรับนักขุดทอง! ขุดทองคำ เพชรเม็ดงาม และถุงสมบัติลึกลับ<br>
-                    ทุกครั้งที่ขุดสมบัติขึ้นมา ตอบ <strong>คำถามภาษาอังกฤษเกี่ยวกับสัตว์</strong> เพื่อรับเงิน + โบนัสพิเศษ!
+                    ทุกครั้งที่ขุดสมบัติขึ้นมา ตอบ <strong>คำถามภาษาอังกฤษเกี่ยวกับสัตว์</strong> เพื่อรับเงิน +
+                    โบนัสพิเศษ!
                 </p>
 
-                <div style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-bottom: 10px;">
-                    <button class="btn-primary" id="enterGameBtn" style="padding: 14px 44px; font-size: 24px;">เริ่มเลย 🚀</button>
+                <div
+                    style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-bottom: 10px;">
+                    <button class="btn-primary" id="enterGameBtn" style="padding: 14px 44px; font-size: 24px;">เริ่มเลย
+                        🚀</button>
                 </div>
             </div>
         </div>
 
-        <!-- 1. Start Screen (Active by default so player can jump straight in) -->
-        <div class="overlay active" id="startOverlay">
+        <!-- 1. Start Screen -->
+        <div class="overlay" id="startOverlay">
             <div class="glass-panel" style="max-width: 800px; padding: 24px 30px;">
                 <div class="overlay-title" style="font-size: 40px; margin-bottom: 4px;">GOLD MINER</div>
-                <div class="overlay-subtitle" style="font-size: 16px; margin-bottom: 20px; color: #ffb703;">ปริศนาสัตว์โลกน่ารู้ 🦁</div>
-                
+                <div class="overlay-subtitle" style="font-size: 16px; margin-bottom: 20px; color: #ffb703;">
+                    ปริศนาสัตว์โลกน่ารู้ 🦁</div>
+
                 <!-- Main Grid Layout -->
-                <div class="start-grid" style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; width: 100%; text-align: left;">
-                    
+                <div class="start-grid"
+                    style="display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; width: 100%; text-align: left;">
+
                     <!-- Left Column: Leaderboard -->
-                    <div class="leaderboard-card" style="background: rgba(0, 0, 0, 0.25); padding: 16px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column;">
-                        <h3 style="color: #ffea00; font-size: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
+                    <div class="leaderboard-card"
+                        style="background: rgba(0, 0, 0, 0.25); padding: 16px 20px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column;">
+                        <h3
+                            style="color: #ffea00; font-size: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
                             <span>🏆</span> Hall of Fame (ตารางทำสถิติ)
                         </h3>
-                        <div id="highScoresContainer" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; justify-content: center;">
+                        <div id="highScoresContainer"
+                            style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; justify-content: center;">
                             <!-- Populated by JS -->
                         </div>
                     </div>
-                    
+
                     <!-- Right Column: Controls & Play -->
-                    <div class="controls-card" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+                    <div class="controls-card"
+                        style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
                         <div class="instructions" style="margin-bottom: 0; padding: 12px 16px; font-size: 14px;">
-                            <strong style="font-size: 15px; color: #ffea00; display: block; margin-bottom: 6px;">วิธีเล่น:</strong>
+                            <strong
+                                style="font-size: 15px; color: #ffea00; display: block; margin-bottom: 6px;">วิธีเล่น:</strong>
                             <div class="instructions-grid" style="font-size: 13px; gap: 6px 12px;">
-                                <span class="key-label" style="font-size: 11px; padding: 1px 6px;">SPACE / ลูกศรลง</span>
+                                <span class="key-label" style="font-size: 11px; padding: 1px 6px;">SPACE /
+                                    ลูกศรลง</span>
                                 <span>ปล่อยตะขอเพื่อหนีบสมบัติ</span>
-                                
+
                                 <span class="key-label" style="font-size: 11px; padding: 1px 6px;">W / ลูกศรขึ้น</span>
                                 <span>ใช้ไดนาไมต์ระเบิดสมบัติ</span>
-                                
+
                                 <span class="key-label" style="font-size: 11px; padding: 1px 6px;">ตอบคำถาม</span>
                                 <span>ตอบถูก รับเงินสมบัติ + โบนัส $50!</span>
                             </div>
                         </div>
                         <!-- Music Volume Control -->
-                        <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px;">
-                            <span style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵 เสียงเพลง: <span id="musicVolText">30%</span></span>
-                            <input type="range" id="musicVolSlider" min="0" max="100" value="30" style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
+                        <div
+                            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px;">
+                            <span
+                                style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵
+                                เสียงเพลง: <span id="musicVolText">30%</span></span>
+                            <input type="range" id="musicVolSlider" min="0" max="100" value="30"
+                                style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
                         </div>
 
                         <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
-                            <input type="text" id="playerNameInputStart" placeholder="กรอกชื่อผู้เล่น..." maxlength="12" style="background: rgba(255, 255, 255, 0.1); border: 2px solid #ffea00; border-radius: 12px; color: white; padding: 10px; font-size: 18px; text-align: center; font-family: inherit; outline: none; box-shadow: 0 0 10px rgba(255, 234, 0, 0.15);">
-                            
+                            <input type="text" id="playerNameInputStart" placeholder="กรอกชื่อผู้เล่น..." maxlength="12"
+                                style="background: rgba(255, 255, 255, 0.1); border: 2px solid #ffea00; border-radius: 12px; color: white; padding: 10px; font-size: 18px; text-align: center; font-family: inherit; outline: none; box-shadow: 0 0 10px rgba(255, 234, 0, 0.15);">
+
                             <div style="display: flex; gap: 8px;">
-                                <button class="btn-primary" id="openCameraBtnStart" style="flex: 1; padding: 10px 0; font-size: 15px; background: linear-gradient(135deg, #4ecdc4, #45b7d1); border-bottom-color: #2b8a9e; color: #003049;">📷 ถ่ายรูปใบหน้า</button>
-                                <button class="btn-primary" id="selectLevelBtnStart" style="flex: 1; padding: 10px 0; font-size: 15px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">🎯 เลือกด่าน (1-3)</button>
+                                <button class="btn-primary" id="openCameraBtnStart"
+                                    style="flex: 1; padding: 10px 0; font-size: 15px; background: linear-gradient(135deg, #4ecdc4, #45b7d1); border-bottom-color: #2b8a9e; color: #003049;">📷
+                                    ถ่ายรูปใบหน้า</button>
+                                <button class="btn-primary" id="selectLevelBtnStart"
+                                    style="flex: 1; padding: 10px 0; font-size: 15px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">🎯
+                                    เลือกด่าน (1-3)</button>
                             </div>
-                            
-                            <button class="btn-primary" id="startBtn" style="padding: 14px 0; width: 100%; font-size: 24px; animation: pulseGlow 1.5s infinite alternate;">
+
+                            <button class="btn-primary" id="startBtn"
+                                style="padding: 14px 0; width: 100%; font-size: 24px; animation: pulseGlow 1.5s infinite alternate;">
                                 เริ่มเล่นเกมทันที 🚀
                             </button>
                         </div>
@@ -130,11 +155,12 @@
         <div class="overlay" id="checkpointOverlay">
             <div class="glass-panel" style="max-width: 880px; padding: 26px 32px;">
                 <div class="overlay-title" style="font-size: 38px; margin-bottom: 2px;">🎯 เลือกด่านขุดทอง</div>
-                <div class="overlay-subtitle" style="font-size: 16px; margin-bottom: 20px; color: #ffb703;">เลือกด่าน 1 ใน 3 ด่านเพื่อเข้าสู่เกมและเริ่มภารกิจขุดทอง!</div>
-                
+                <div class="overlay-subtitle" style="font-size: 16px; margin-bottom: 20px; color: #ffb703;">เลือกด่าน 1
+                    ใน 3 ด่านเพื่อเข้าสู่เกมและเริ่มภารกิจขุดทอง!</div>
+
                 <!-- 3 Level Selection Cards -->
                 <div class="checkpoint-grid">
-                    
+
                     <!-- Level 1 Card -->
                     <div class="checkpoint-card" id="checkpointCard1" onclick="CheckpointManager.selectLevel(1)">
                         <div class="checkpoint-badge easy">🟢 ง่าย</div>
@@ -148,7 +174,7 @@
                         </div>
                         <button class="btn-checkpoint">เล่นด่าน 1 🚀</button>
                     </div>
-                    
+
                     <!-- Level 2 Card -->
                     <div class="checkpoint-card" id="checkpointCard2" onclick="CheckpointManager.selectLevel(2)">
                         <div class="checkpoint-badge medium">🟡 ปานกลาง</div>
@@ -162,7 +188,7 @@
                         </div>
                         <button class="btn-checkpoint">เล่นด่าน 2 🚀</button>
                     </div>
-                    
+
                     <!-- Level 3 Card -->
                     <div class="checkpoint-card" id="checkpointCard3" onclick="CheckpointManager.selectLevel(3)">
                         <div class="checkpoint-badge hard">🔴 ยาก</div>
@@ -180,9 +206,12 @@
                 </div>
 
                 <!-- Notice Message for Locked Levels -->
-                <div id="checkpointNoticeMsg" style="display: none; color: #ff4d4d; font-weight: bold; font-size: 15px; margin-top: 12px; background: rgba(230, 57, 70, 0.15); border: 1px solid #ff4d4d; padding: 6px 16px; border-radius: 20px;"></div>
+                <div id="checkpointNoticeMsg"
+                    style="display: none; color: #ff4d4d; font-weight: bold; font-size: 15px; margin-top: 12px; background: rgba(230, 57, 70, 0.15); border: 1px solid #ff4d4d; padding: 6px 16px; border-radius: 20px;">
+                </div>
 
-                <button class="btn-primary" id="checkpointBackBtn" style="margin-top: 18px; padding: 10px 30px; font-size: 16px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">
+                <button class="btn-primary" id="checkpointBackBtn"
+                    style="margin-top: 18px; padding: 10px 30px; font-size: 16px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">
                     ⬅️ กลับหน้าหลัก
                 </button>
             </div>
@@ -195,17 +224,20 @@
                     <div class="overlay-title" style="margin-bottom: 0; font-size: 38px;">ร้านค้าคนขุดทอง 🛒</div>
                     <div class="shop-cash">เงินของคุณ: $<span id="shopCashValue">0</span></div>
                 </div>
-                
-                <p style="color: #e2d4c9; margin-bottom: 20px; font-size: 16px;">ซื้อไอเทมบัฟเสริมพลังสำหรับด่านถัดไป! ราคาสินค้าจะเปลี่ยนไปในแต่ละด่าน</p>
-                
+
+                <p style="color: #e2d4c9; margin-bottom: 20px; font-size: 16px;">ซื้อไอเทมบัฟเสริมพลังสำหรับด่านถัดไป!
+                    ราคาสินค้าจะเปลี่ยนไปในแต่ละด่าน</p>
+
                 <div class="shop-items-grid" id="shopItemsGrid">
                     <!-- Shop cards generated dynamically by JS -->
                 </div>
-                
+
                 <div class="shop-footer">
                     <div class="shop-timer">เป้าหมายด่านถัดไป: $<span id="shopNextGoal">1500</span></div>
                     <div style="display: flex; gap: 12px; align-items: center;">
-                        <button class="btn-primary" id="shopHomeBtn" style="background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white; padding: 12px 24px; font-size: 18px;">หน้าหลัก 🏠</button>
+                        <button class="btn-primary" id="shopHomeBtn"
+                            style="background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white; padding: 12px 24px; font-size: 18px;">หน้าหลัก
+                            🏠</button>
                         <button class="btn-primary" id="nextLevelBtn">เริ่มด่านถัดไป 🚀</button>
                     </div>
                 </div>
@@ -217,12 +249,12 @@
             <div class="glass-panel">
                 <div class="overlay-title" style="color: #4cd964; font-size: 42px;">ผ่านด่านแล้ว! 🎉</div>
                 <div class="overlay-subtitle" style="margin-bottom: 24px;">คุณทำเงินสะสมได้ถึงเป้าหมายของด่าน!</div>
-                
+
                 <div style="font-size: 20px; color: #e2d4c9; margin-bottom: 28px; line-height: 1.8;">
                     เงินสะสมปัจจุบัน: <strong style="color: #ffea00;">$<span id="transitionCash">0</span></strong><br>
                     เป้าหมายของด่าน: <strong style="color: #e6f7ff;">$<span id="transitionTarget">0</span></strong>
                 </div>
-                
+
                 <button class="btn-primary" id="goShopBtn">ขึ้นรถไฟไปด่านถัดไป 🚂</button>
             </div>
         </div>
@@ -230,41 +262,57 @@
         <!-- 3.5 Mini-Game Intro Overlay -->
         <div class="overlay" id="minigameIntroOverlay">
             <div class="glass-panel" style="max-width: 600px; padding: 24px 30px;">
-                <div class="overlay-title" style="color: #ffb703; font-size: 36px; margin-bottom: 8px;">🚂 ขึ้นรถไฟขุดทอง!</div>
-                <div class="overlay-subtitle" style="font-size: 18px; margin-bottom: 20px; color: #ffea00;">เดินทางข้ามด่านด้วยรถไฟเหมืองทองคำ</div>
-                
-                <div class="instructions" style="text-align: left; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 16px 20px; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
-                    <strong style="color: #ffea00; font-size: 17px; display: block; margin-bottom: 10px;">กติกาการเล่น</strong>
-                    <div style="margin-bottom: 12px; display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center;">
+                <div class="overlay-title" style="color: #ffb703; font-size: 36px; margin-bottom: 8px;">🚂
+                    ขึ้นรถไฟขุดทอง!</div>
+                <div class="overlay-subtitle" style="font-size: 18px; margin-bottom: 20px; color: #ffea00;">
+                    เดินทางข้ามด่านด้วยรถไฟเหมืองทองคำ</div>
+
+                <div class="instructions"
+                    style="text-align: left; background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 16px 20px; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    <strong
+                        style="color: #ffea00; font-size: 17px; display: block; margin-bottom: 10px;">กติกาการเล่น</strong>
+                    <div
+                        style="margin-bottom: 12px; display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; align-items: center;">
                         <span class="key-label" style="font-size: 12px; padding: 3px 8px;">Space / ⬆️ / แตะจอ</span>
-                        <span><strong>กระโดด</strong> หลบหิน/ระเบิดที่พื้น <strong>หลบหลุมลึก</strong> และเก็บทองลอยสูง</span>
-                        
+                        <span><strong>กระโดด</strong> หลบหิน/ระเบิดที่พื้น <strong>หลบหลุมลึก</strong>
+                            และเก็บทองลอยสูง</span>
+
                         <span class="key-label" style="font-size: 12px; padding: 3px 8px;">⬇️ / S</span>
                         <span><strong>หมอบ</strong> หลบเพดานหินอุโมงค์ต่ำ</span>
                     </div>
-                    <span style="display: block; color: #a2d2ff; font-weight: bold; margin-top: 10px;">⭐ ทองคำที่เก็บได้จะบวกเพิ่มเข้าเงินสะสมไปช้อปปิ้งต่อ!</span>
-                    <span style="display: block; color: #ffafcc; font-weight: bold;">⚠️ ระวัง! ชนอุปสรรคหัก $100 | ตกหลุมหัก $150!</span>
+                    <span style="display: block; color: #a2d2ff; font-weight: bold; margin-top: 10px;">⭐
+                        ทองคำที่เก็บได้จะบวกเพิ่มเข้าเงินสะสมไปช้อปปิ้งต่อ!</span>
+                    <span style="display: block; color: #ffafcc; font-weight: bold;">⚠️ ระวัง! ชนอุปสรรคหัก $100 |
+                        ตกหลุมหัก $150!</span>
                 </div>
-                
-                <button class="btn-primary" id="startMinigameBtn" style="padding: 12px 40px; font-size: 22px; width: 100%;">ออกเดินทางเลย! 🚀</button>
+
+                <button class="btn-primary" id="startMinigameBtn"
+                    style="padding: 12px 40px; font-size: 22px; width: 100%;">ออกเดินทางเลย! 🚀</button>
             </div>
         </div>
 
         <!-- 3.6 Mini-Game Outro Overlay -->
         <div class="overlay" id="minigameOutroOverlay">
             <div class="glass-panel" style="max-width: 500px; padding: 26px 32px;">
-                <div class="overlay-title" style="color: #4cd964; font-size: 38px; margin-bottom: 4px;">ถึงที่หมายแล้ว! 🚉</div>
+                <div class="overlay-title" style="color: #4cd964; font-size: 38px; margin-bottom: 4px;">ถึงที่หมายแล้ว!
+                    🚉</div>
                 <div class="overlay-subtitle" style="margin-bottom: 24px; color: #a8dadc;">สรุปยอดรางวัลการเดินทาง</div>
-                
-                <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; font-size: 18px; color: #e2d4c9; margin-bottom: 28px; line-height: 2.0; text-align: left;">
-                    💰 ทองที่เก็บได้: <strong style="color: #4cd964; float: right;">+$$<span id="minigameGoldEarned">0</span></strong><br>
-                    💥 ชนอุปสรรค: <strong style="color: #ff4d4d; float: right;">-$$<span id="minigameObstaclesPenalty">0</span></strong><br>
-                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 10px; padding-top: 10px; font-weight: bold;">
-                        💵 เงินสะสมรวมล่าสุด: <strong style="color: #ffea00; float: right; font-size: 22px;">$$<span id="minigameNetCash">0</span></strong>
+
+                <div
+                    style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 20px; font-size: 18px; color: #e2d4c9; margin-bottom: 28px; line-height: 2.0; text-align: left;">
+                    💰 ทองที่เก็บได้: <strong style="color: #4cd964; float: right;">+$$<span
+                            id="minigameGoldEarned">0</span></strong><br>
+                    💥 ชนอุปสรรค: <strong style="color: #ff4d4d; float: right;">-$$<span
+                            id="minigameObstaclesPenalty">0</span></strong><br>
+                    <div
+                        style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 10px; padding-top: 10px; font-weight: bold;">
+                        💵 เงินสะสมรวมล่าสุด: <strong style="color: #ffea00; float: right; font-size: 22px;">$$<span
+                                id="minigameNetCash">0</span></strong>
                     </div>
                 </div>
-                
-                <button class="btn-primary" id="finishMinigameBtn" style="padding: 12px 40px; font-size: 20px; width: 100%;">ไปยังร้านค้า 🛒</button>
+
+                <button class="btn-primary" id="finishMinigameBtn"
+                    style="padding: 12px 40px; font-size: 20px; width: 100%;">ไปยังร้านค้า 🛒</button>
             </div>
         </div>
 
@@ -272,21 +320,27 @@
         <div class="overlay" id="gameOverOverlay">
             <div class="glass-panel">
                 <div class="overlay-title" style="color: #ff3b30; font-size: 44px;">GAME OVER</div>
-                <div class="overlay-subtitle" id="gameOverReason" style="margin-bottom: 20px;">คุณทำเงินสะสมไม่ถึงเป้าหมายของด่าน</div>
-                
+                <div class="overlay-subtitle" id="gameOverReason" style="margin-bottom: 20px;">
+                    คุณทำเงินสะสมไม่ถึงเป้าหมายของด่าน</div>
+
                 <div style="font-size: 24px; color: #e2d4c9; margin-bottom: 24px;">
                     คะแนนรวมสุดท้าย: <strong style="color: #ffea00;">$<span id="finalScore">0</span></strong>
                 </div>
 
                 <div class="instructions" style="display: none; text-align: center; margin-bottom: 24px;">
                     <h3>🎉 บันทึกสถิติคะแนนสูงสุด!</h3>
-                    <input type="text" id="playerNameInput" placeholder="กรอกชื่อของคุณ" maxlength="12" style="background: rgba(255,255,255,0.1); border: 2px solid #ffea00; border-radius: 8px; color: white; padding: 8px 16px; font-size: 18px; text-align: center; width: 80%; margin-top: 10px; font-family: inherit; outline: none;">
-                    <button class="btn-buy" id="saveScoreBtn" style="width: auto; margin-top: 12px; padding: 8px 24px; font-size: 16px;">บันทึกสถิติ</button>
+                    <input type="text" id="playerNameInput" placeholder="กรอกชื่อของคุณ" maxlength="12"
+                        style="background: rgba(255,255,255,0.1); border: 2px solid #ffea00; border-radius: 8px; color: white; padding: 8px 16px; font-size: 18px; text-align: center; width: 80%; margin-top: 10px; font-family: inherit; outline: none;">
+                    <button class="btn-buy" id="saveScoreBtn"
+                        style="width: auto; margin-top: 12px; padding: 8px 24px; font-size: 16px;">บันทึกสถิติ</button>
                 </div>
-                
+
                 <div style="display: flex; gap: 16px; justify-content: center; width: 100%;">
-                    <button class="btn-primary" id="gameOverHomeBtn" style="padding: 14px 28px; font-size: 20px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white;">หน้าหลัก 🏠</button>
-                    <button class="btn-primary" id="restartBtn" style="padding: 14px 28px; font-size: 20px;">เล่นอีกครั้ง 🔄</button>
+                    <button class="btn-primary" id="gameOverHomeBtn"
+                        style="padding: 14px 28px; font-size: 20px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white;">หน้าหลัก
+                        🏠</button>
+                    <button class="btn-primary" id="restartBtn"
+                        style="padding: 14px 28px; font-size: 20px;">เล่นอีกครั้ง 🔄</button>
                 </div>
             </div>
         </div>
@@ -295,83 +349,117 @@
         <div class="overlay" id="pauseOverlay">
             <div class="glass-panel" style="max-width: 400px;">
                 <div class="overlay-title" style="font-size: 36px; margin-bottom: 24px;">หยุดเกมชั่วคราว</div>
-                
+
                 <!-- Music Volume Control -->
-                <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 18px;">
-                    <span style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵 เสียงเพลง BGM: <span id="pauseMusicVolText">30%</span></span>
-                    <input type="range" id="pauseMusicVolSlider" min="0" max="100" value="30" style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
+                <div
+                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; margin-bottom: 18px;">
+                    <span
+                        style="color: #ffea00; font-weight: bold; min-width: 90px; display: flex; align-items: center; gap: 4px;">🎵
+                        เสียงเพลง BGM: <span id="pauseMusicVolText">30%</span></span>
+                    <input type="range" id="pauseMusicVolSlider" min="0" max="100" value="30"
+                        style="flex-grow: 1; cursor: pointer; accent-color: #ffea00;">
                 </div>
-                
-                <button class="btn-primary" id="resumeBtn" style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px;">เล่นต่อ ▶️</button>
-                <button class="btn-primary" id="pauseRestartBtn" style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">เริ่มด่านใหม่ 🔄</button>
-                <button class="btn-primary" id="pauseHomeBtn" style="width: 100%; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white;">หน้าหลัก 🏠</button>
+
+                <button class="btn-primary" id="resumeBtn"
+                    style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px;">เล่นต่อ ▶️</button>
+                <button class="btn-primary" id="pauseRestartBtn"
+                    style="width: 100%; margin-bottom: 12px; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222;">เริ่มด่านใหม่
+                    🔄</button>
+                <button class="btn-primary" id="pauseHomeBtn"
+                    style="width: 100%; font-size: 20px; padding: 12px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white;">หน้าหลัก
+                    🏠</button>
             </div>
         </div>
 
         <!-- 6. Quiz Screen -->
         <div class="overlay" id="quizOverlay">
             <div class="glass-panel" id="quizPanel" style="max-width: 680px; padding: 24px 32px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px;">
-                    <div class="overlay-subtitle" id="quizItemSummary" style="font-size: 18px; color: #ffea00; margin-bottom: 0;">กำลังขุด: ทองคำใหญ่ (มูลค่า: $500)</div>
-                    <div id="quizTimerBadge" style="background: rgba(230, 57, 70, 0.25); border: 2px solid #ff4d4d; border-radius: 20px; padding: 4px 16px; font-weight: bold; font-size: 18px; color: #ff4d4d; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(255, 77, 77, 0.4); min-width: 90px; justify-content: center;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 12px;">
+                    <div class="overlay-subtitle" id="quizItemSummary"
+                        style="font-size: 18px; color: #ffea00; margin-bottom: 0;">กำลังขุด: ทองคำใหญ่ (มูลค่า: $500)
+                    </div>
+                    <div id="quizTimerBadge"
+                        style="background: rgba(230, 57, 70, 0.25); border: 2px solid #ff4d4d; border-radius: 20px; padding: 4px 16px; font-weight: bold; font-size: 18px; color: #ff4d4d; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(255, 77, 77, 0.4); min-width: 90px; justify-content: center;">
                         ⏱️ <span id="quizTimerValue">10</span>s
                     </div>
                 </div>
 
                 <!-- Quiz Timer Progress Bar -->
-                <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 18px;">
-                    <div id="quizTimerBar" style="width: 100%; height: 100%; background: linear-gradient(90deg, #4cd964, #ffcc00, #ff3b30); transition: width 0.1s linear; border-radius: 4px;"></div>
+                <div
+                    style="width: 100%; height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; margin-bottom: 18px;">
+                    <div id="quizTimerBar"
+                        style="width: 100%; height: 100%; background: linear-gradient(90deg, #4cd964, #ffcc00, #ff3b30); transition: width 0.1s linear; border-radius: 4px;">
+                    </div>
                 </div>
 
-                <div style="font-size: 24px; font-weight: bold; margin-bottom: 24px; color: #ffffff; line-height: 1.4;" id="quizQuestionText">
+                <div style="font-size: 24px; font-weight: bold; margin-bottom: 24px; color: #ffffff; line-height: 1.4;"
+                    id="quizQuestionText">
                     Question text goes here?
                 </div>
-                
+
                 <!-- Quiz Choices Grid -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; margin-bottom: 24px;" id="quizChoicesContainer">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; margin-bottom: 24px;"
+                    id="quizChoicesContainer">
                     <!-- Choice buttons generated dynamically -->
                 </div>
-                
+
                 <!-- Quiz Status Feedback Panel -->
-                <div id="quizFeedbackPanel" style="display: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; text-align: center; margin-bottom: 12px;">
+                <div id="quizFeedbackPanel"
+                    style="display: none; width: 100%; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 20px; text-align: center; margin-bottom: 12px;">
                     <!-- Correct / Incorrect message -->
                 </div>
-                
+
             </div>
         </div>
 
         <!-- 7. Cameroll Camera Modal -->
         <div class="overlay" id="camerollModal">
             <div class="glass-panel" style="max-width: 440px; padding: 24px; text-align: center;">
-                <div class="overlay-title" id="camerollTitle" style="font-size: 32px; margin-bottom: 8px;">📷 ถ่ายรูปหน้าคนขุด</div>
-                <p id="camerollSubTitle" style="font-size: 14px; color: #e2d4c9; margin-bottom: 16px;">จัดใบหน้าให้อยู่ตรงกลางวงกลมเพื่อใช้เป็นตัวละครคนขุดทองในเกม</p>
-                
+                <div class="overlay-title" id="camerollTitle" style="font-size: 32px; margin-bottom: 8px;">📷
+                    ถ่ายรูปหน้าคนขุด</div>
+                <p id="camerollSubTitle" style="font-size: 14px; color: #e2d4c9; margin-bottom: 16px;">
+                    จัดใบหน้าให้อยู่ตรงกลางวงกลมเพื่อใช้เป็นตัวละครคนขุดทองในเกม</p>
+
                 <!-- Live Video Feed / Captured Preview inside circle mask -->
-                <div style="position: relative; width: 220px; height: 220px; margin: 0 auto 16px auto; border-radius: 50%; border: 4px solid #ffea00; overflow: hidden; background: #111; box-shadow: 0 0 20px rgba(255, 234, 0, 0.4);">
-                    <video id="camerollVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
-                    <img id="camerollPreviewImg" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Photo Preview">
+                <div
+                    style="position: relative; width: 220px; height: 220px; margin: 0 auto 16px auto; border-radius: 50%; border: 4px solid #ffea00; overflow: hidden; background: #111; box-shadow: 0 0 20px rgba(255, 234, 0, 0.4);">
+                    <video id="camerollVideo" autoplay playsinline
+                        style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <img id="camerollPreviewImg" style="display: none; width: 100%; height: 100%; object-fit: cover;"
+                        alt="Photo Preview">
                     <canvas id="camerollCanvas" style="display: none;"></canvas>
                 </div>
-                
-                <div id="camerollStatusMsg" style="font-size: 15px; font-weight: bold; color: #ffb703; margin-bottom: 14px; min-height: 22px;"></div>
-                
+
+                <div id="camerollStatusMsg"
+                    style="font-size: 15px; font-weight: bold; color: #ffb703; margin-bottom: 14px; min-height: 22px;">
+                </div>
+
                 <!-- Initial Action Controls -->
                 <div id="cameraCaptureControls" style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                    <button class="btn-primary" id="snapPhotoBtn" style="padding: 12px; font-size: 18px; width: 100%;">📸 ถ่ายรูปภาพ (Snap Photo)</button>
-                    
-                    <label style="background: rgba(255,255,255,0.08); border: 1px dashed #ffb703; border-radius: 12px; padding: 10px; cursor: pointer; color: #ffea00; font-weight: bold; font-size: 14px; display: block; text-align: center;">
+                    <button class="btn-primary" id="snapPhotoBtn"
+                        style="padding: 12px; font-size: 18px; width: 100%;">📸 ถ่ายรูปภาพ (Snap Photo)</button>
+
+                    <label
+                        style="background: rgba(255,255,255,0.08); border: 1px dashed #ffb703; border-radius: 12px; padding: 10px; cursor: pointer; color: #ffea00; font-weight: bold; font-size: 14px; display: block; text-align: center;">
                         📁 หรือเลือกไฟล์รูปภาพจากเครื่อง
                         <input type="file" id="camerollFileInput" accept="image/*" style="display: none;">
                     </label>
-                    
-                    <button class="btn-primary" id="closeCameraBtn" style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white; width: 100%;">ปิดหน้าต่าง</button>
+
+                    <button class="btn-primary" id="closeCameraBtn"
+                        style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #e63946, #d62828); border-bottom-color: #9e2a2b; color: white; width: 100%;">ปิดหน้าต่าง</button>
                 </div>
 
                 <!-- Confirmation Controls (Hidden initially) -->
                 <div id="cameraConfirmControls" style="display: none; flex-direction: column; gap: 10px; width: 100%;">
-                    <button class="btn-primary" id="confirmPhotoBtn" style="padding: 12px; font-size: 18px; width: 100%; background: linear-gradient(135deg, #4cd964, #249033); border-bottom-color: #1b6c25; color: white;">✅ ชอบรูปนี้ (ใช้รูปนี้เลย)</button>
-                    <button class="btn-primary" id="retakePhotoBtn" style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #ff9f1c, #d46a00); border-bottom-color: #994c00; color: white; width: 100%;">🔄 ถ่ายใหม่ / เลือกใหม่</button>
-                    <button class="btn-primary" id="cancelConfirmBtn" style="padding: 8px; font-size: 14px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222; width: 100%;">ยกเลิก</button>
+                    <button class="btn-primary" id="confirmPhotoBtn"
+                        style="padding: 12px; font-size: 18px; width: 100%; background: linear-gradient(135deg, #4cd964, #249033); border-bottom-color: #1b6c25; color: white;">✅
+                        ชอบรูปนี้ (ใช้รูปนี้เลย)</button>
+                    <button class="btn-primary" id="retakePhotoBtn"
+                        style="padding: 10px; font-size: 16px; background: linear-gradient(135deg, #ff9f1c, #d46a00); border-bottom-color: #994c00; color: white; width: 100%;">🔄
+                        ถ่ายใหม่ / เลือกใหม่</button>
+                    <button class="btn-primary" id="cancelConfirmBtn"
+                        style="padding: 8px; font-size: 14px; background: linear-gradient(135deg, #8e9aaf, #cbc0d3); border-bottom-color: #6c757d; color: #222; width: 100%;">ยกเลิก</button>
                 </div>
             </div>
         </div>
@@ -385,6 +473,8 @@
     <script src="cameroll.js"></script>
     <script src="checkpoint.js"></script>
     <script src="minigame.js"></script>
+    <script src="begin.js"></script>
     <script src="game.js"></script>
 </body>
+
 </html>
