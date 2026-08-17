@@ -8,15 +8,16 @@ function drawMiner(ctx, state, time) {
     
     // 1. Mine Cart Box
     ctx.fillStyle = '#6f4e37'; // rich wood brown
-    ctx.fillRect(mx - 42, my, 84, 22);
+    ctx.fillRect(mx - 65, my, 130, 24);
     ctx.strokeStyle = '#4a3325';
     ctx.lineWidth = 3;
-    ctx.strokeRect(mx - 42, my, 84, 22);
+    ctx.strokeRect(mx - 65, my, 130, 24);
     
     // Diagonal wood planks inside cart
     ctx.beginPath();
-    ctx.moveTo(mx - 20, my); ctx.lineTo(mx - 35, my + 22);
-    ctx.moveTo(mx + 20, my); ctx.lineTo(mx + 5, my + 22);
+    ctx.moveTo(mx - 35, my); ctx.lineTo(mx - 50, my + 24);
+    ctx.moveTo(mx, my); ctx.lineTo(mx - 15, my + 24);
+    ctx.moveTo(mx + 35, my); ctx.lineTo(mx + 20, my + 24);
     ctx.strokeStyle = '#4a3325';
     ctx.lineWidth = 1.5;
     ctx.stroke();
@@ -24,8 +25,8 @@ function drawMiner(ctx, state, time) {
     // Cart wheels
     ctx.fillStyle = '#2b2b2b';
     ctx.beginPath();
-    ctx.arc(mx - 28, my + 22, 11, 0, Math.PI * 2);
-    ctx.arc(mx + 28, my + 22, 11, 0, Math.PI * 2);
+    ctx.arc(mx - 45, my + 24, 12, 0, Math.PI * 2);
+    ctx.arc(mx + 45, my + 24, 12, 0, Math.PI * 2);
     ctx.fill();
     ctx.strokeStyle = '#121212';
     ctx.lineWidth = 2.5;

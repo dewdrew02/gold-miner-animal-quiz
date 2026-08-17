@@ -1,0 +1,13 @@
+{
+  "name": "gold-miner-animal-quiz-forcommunicate",
+  "version": "1.0.0",
+  "description": "Gold Miner Animal Quiz Game",
+  "scripts": {
+    "dev": "npx http-server ./ -p 8000 -o",
+    "start": "npx http-server ./ -p 8000 -o",
+    "serve": "node scratch_server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

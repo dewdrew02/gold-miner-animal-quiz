@@ -28,6 +28,7 @@ const Game = {
     currentQuestion: null,
     quizTimerInterval: null,
     quizStartTime: null,
+    quizResumeTimeout: null,
     
     // Gameplay Entities
     claw: {
@@ -40,9 +41,9 @@ const Game = {
         angle: 0, // In radians
         state: 'SWING', // 'SWING', 'SHOOT', 'RETRACT'
         swingDir: 1, // 1 for right, -1 for left
-        swingSpeed: 0.015,
-        shootSpeed: 6.5,
-        baseRetractSpeed: 6,
+        swingSpeed: 0.018,
+        shootSpeed: 5,
+        baseRetractSpeed: 5,
         grabbedItem: null,
         hookSize: 14
     },
@@ -62,6 +63,7 @@ const Game = {
         this.container = document.getElementById('gameContainer');
         this.floatingLayer = document.getElementById('floatingScoreLayer');
         
+        this.loadFallbackQuestions(); // Initialize questions immediately synchronously
         this.loadHighScores();
         this.loadQuestions();
         this.setupEventListeners();
@@ -69,13 +71,12 @@ const Game = {
         this.renderMenuHighScores();
         
         // Add Enter Game transition
-        document.getElementById('enterGameBtn').addEventListener('click', () => {
-            this.hideAllOverlays();
-            this.showOverlay('startOverlay');
-            if (typeof AudioSynth !== 'undefined') {
-                AudioSynth.startMusic();
-            }
-        });
+        const enterGameBtn = document.getElementById('enterGameBtn');
+        if (enterGameBtn) {
+            enterGameBtn.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
 
         // Particle update loop runs inside main loop
         requestAnimationFrame((t) => this.loop(t));
@@ -85,43 +86,59 @@ const Game = {
         fetch('questions.json')
             .then(res => res.json())
             .then(data => {
-                this.questions = data;
-                this.unusedQuestions = [...data];
-                console.log("Loaded questions:", this.questions.length);
+                if (data && data.length > 0) {
+                    this.questions = data;
+                    this.unusedQuestions = [...data];
+                    console.log("Loaded questions from JSON:", this.questions.length);
+                }
             })
             .catch(err => {
-                console.warn("Could not load questions.json, loading fallback list.", err);
-                this.loadFallbackQuestions();
+                console.warn("Could not fetch questions.json, using built-in questions.", err);
             });
     },
 
     loadFallbackQuestions() {
         this.questions = [
-            {
-                "question": "What animal barks? (Woof! Woof!)",
-                "options": ["Dog", "Cat", "Lion", "Fish"],
-                "answer": "Dog"
-            },
-            {
-                "question": "What animal meows? (Meow! Meow!)",
-                "options": ["Bird", "Cat", "Cow", "Rabbit"],
-                "answer": "Cat"
-            },
-            {
-                "question": "Which animal has a very long neck?",
-                "options": ["Frog", "Giraffe", "Dog", "Panda"],
-                "answer": "Giraffe"
-            },
-            {
-                "question": "Which animal has black and white stripes?",
-                "options": ["Zebra", "Lion", "Monkey", "Dog"],
-                "answer": "Zebra"
-            },
-            {
-                "question": "Which animal loves to eat bananas and climb trees?",
-                "options": ["Monkey", "Turtle", "Snake", "Sheep"],
-                "answer": "Monkey"
-            }
+            { "question": "Which animal barks? (Woof! Woof!)", "options": ["Dog", "Cat", "Lion", "Fish"], "answer": "Dog" },
+            { "question": "Which animal meows? (Meow! Meow!)", "options": ["Bird", "Cat", "Cow", "Rabbit"], "answer": "Cat" },
+            { "question": "Which animal has a very long neck to eat leaves?", "options": ["Giraffe", "Elephant", "Dog", "Panda"], "answer": "Giraffe" },
+            { "question": "Which animal has a very long nose (trunk) and big ears?", "options": ["Elephant", "Cat", "Bee", "Bird"], "answer": "Elephant" },
+            { "question": "Which animal hops, has long ears, and loves carrots?", "options": ["Rabbit", "Tiger", "Shark", "Pig"], "answer": "Rabbit" },
+            { "question": "Which animal says 'Moo' and gives us milk?", "options": ["Chicken", "Cow", "Fish", "Horse"], "answer": "Cow" },
+            { "question": "Which animal loves to swing on trees and eat bananas?", "options": ["Monkey", "Turtle", "Snake", "Sheep"], "answer": "Monkey" },
+            { "question": "Which pink animal says 'Oink Oink' on the farm?", "options": ["Horse", "Pig", "Lion", "Giraffe"], "answer": "Pig" },
+            { "question": "Which animal lives under water and swims with fins?", "options": ["Fish", "Cat", "Bird", "Rabbit"], "answer": "Fish" },
+            { "question": "Which animal has wings, feathers, and can fly?", "options": ["Dog", "Bird", "Frog", "Snake"], "answer": "Bird" },
+            { "question": "Which bird says 'Quack Quack' and swims in ponds?", "options": ["Duck", "Cow", "Cat", "Cheetah"], "answer": "Duck" },
+            { "question": "Which slow animal carries its hard shell on its back?", "options": ["Rabbit", "Turtle", "Fox", "Panda"], "answer": "Turtle" },
+            { "question": "Which animal has soft white wool and says 'Baa Baa'?", "options": ["Sheep", "Lion", "Tiger", "Monkey"], "answer": "Sheep" },
+            { "question": "Which green animal says 'Ribbit' and jumps in the pond?", "options": ["Frog", "Giraffe", "Elephant", "Horse"], "answer": "Frog" },
+            { "question": "Which animal has no legs and slithers on the ground?", "options": ["Snake", "Cat", "Bird", "Cow"], "answer": "Snake" },
+            { "question": "Which animal looks like a horse with black and white stripes?", "options": ["Zebra", "Lion", "Monkey", "Dog"], "answer": "Zebra" },
+            { "question": "Which black-and-white bear loves to eat bamboo?", "options": ["Panda", "Koala", "Polar Bear", "Tiger"], "answer": "Panda" },
+            { "question": "Which bird lives in the cold ice, wears a black suit, and cannot fly?", "options": ["Penguin", "Parrot", "Eagle", "Owl"], "answer": "Penguin" },
+            { "question": "Which farm bird gives us eggs and says 'Cluck Cluck'?", "options": ["Chicken", "Duck", "Bird", "Rooster"], "answer": "Chicken" },
+            { "question": "Which tiny animal loves cheese and squeaks?", "options": ["Mouse", "Bear", "Elephant", "Tiger"], "answer": "Mouse" },
+            { "question": "Which small insect flies, has yellow and black stripes, and makes honey?", "options": ["Bee", "Ant", "Spider", "Fly"], "answer": "Bee" },
+            { "question": "Which insect has beautiful, colorful wings and flies around flowers?", "options": ["Butterfly", "Ant", "Worm", "Bee"], "answer": "Butterfly" },
+            { "question": "Which big cat is known as the 'king of the jungle'?", "options": ["Lion", "Sheep", "Mouse", "Turtle"], "answer": "Lion" },
+            { "question": "Which wild cat has orange fur with black stripes?", "options": ["Tiger", "Lion", "Dog", "Cat"], "answer": "Tiger" },
+            { "question": "Which big, furry animal loves honey and sleeps all winter?", "options": ["Bear", "Rabbit", "Monkey", "Giraffe"], "answer": "Bear" },
+            { "question": "Which animal hops around and has a pouch to carry its baby?", "options": ["Kangaroo", "Dog", "Bird", "Fish"], "answer": "Kangaroo" },
+            { "question": "Which animal is strong, runs very fast, and people can ride?", "options": ["Horse", "Cat", "Sheep", "Elephant"], "answer": "Horse" },
+            { "question": "Which bird stays awake at night and is known for being wise?", "options": ["Owl", "Parrot", "Duck", "Chicken"], "answer": "Owl" },
+            { "question": "Which large reptile has sharp teeth and lives in rivers?", "options": ["Crocodile", "Frog", "Fish", "Snake"], "answer": "Crocodile" },
+            { "question": "Which smart animal has a bushy tail and orange-red fur?", "options": ["Fox", "Rabbit", "Deer", "Koala"], "answer": "Fox" },
+            { "question": "Which large fish with sharp teeth lives in the ocean?", "options": ["Shark", "Goldfish", "Dolphin", "Octopus"], "answer": "Shark" },
+            { "question": "Which ocean animal walks sideways and has two big claws?", "options": ["Crab", "Fish", "Turtle", "Whale"], "answer": "Crab" },
+            { "question": "Which smart, friendly ocean animal loves to jump out of water?", "options": ["Dolphin", "Shark", "Crab", "Octopus"], "answer": "Dolphin" },
+            { "question": "Which ocean creature has eight long arms?", "options": ["Octopus", "Shark", "Crab", "Fish"], "answer": "Octopus" },
+            { "question": "Which cute gray animal lives in Australia and eats eucalyptus leaves?", "options": ["Koala", "Panda", "Sloth", "Monkey"], "answer": "Koala" },
+            { "question": "Which animal has one or two humps and lives in the dry desert?", "options": ["Camel", "Horse", "Elephant", "Zebra"], "answer": "Camel" },
+            { "question": "Which gentle forest animal has spots and beautiful antlers?", "options": ["Deer", "Fox", "Bear", "Rabbit"], "answer": "Deer" },
+            { "question": "Which small, furry animal has a bushy tail and loves eating nuts?", "options": ["Squirrel", "Mouse", "Rabbit", "Cat"], "answer": "Squirrel" },
+            { "question": "Which small creature has eight legs and spins webs?", "options": ["Spider", "Bee", "Ant", "Butterfly"], "answer": "Spider" },
+            { "question": "Which colorful bird can talk and mimic human voices?", "options": ["Parrot", "Eagle", "Penguin", "Owl"], "answer": "Parrot" }
         ];
         this.unusedQuestions = [...this.questions];
     },
@@ -194,6 +211,24 @@ const Game = {
 
         // HTML Buttons linking
         document.getElementById('startBtn').addEventListener('click', () => this.startGame());
+        
+        const selectLevelBtnStart = document.getElementById('selectLevelBtnStart');
+        if (selectLevelBtnStart) {
+            selectLevelBtnStart.addEventListener('click', () => {
+                if (typeof CheckpointManager !== 'undefined') {
+                    CheckpointManager.showCheckpointMenu();
+                }
+            });
+        }
+
+        const quizContinueBtn = document.getElementById('quizContinueBtn');
+        if (quizContinueBtn) {
+            quizContinueBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.resumeQuizImmediately();
+            });
+        }
+
         document.getElementById('pauseBtn').addEventListener('click', (e) => {
             e.stopPropagation();
             this.togglePause();
@@ -248,34 +283,6 @@ const Game = {
             pauseMusicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
         }
 
-        // Music Volume Slider handling
-        const musicVolSlider = document.getElementById('musicVolSlider');
-        const musicVolText = document.getElementById('musicVolText');
-        const pauseMusicVolSlider = document.getElementById('pauseMusicVolSlider');
-        const pauseMusicVolText = document.getElementById('pauseMusicVolText');
-
-        const updateMusicVolume = (val) => {
-            const vol = parseFloat(val) / 100;
-            if (typeof AudioSynth !== 'undefined') {
-                AudioSynth.setMusicVolume(vol);
-            }
-            if (musicVolSlider) musicVolSlider.value = val;
-            if (musicVolText) musicVolText.textContent = `${val}%`;
-            if (pauseMusicVolSlider) pauseMusicVolSlider.value = val;
-            if (pauseMusicVolText) pauseMusicVolText.textContent = `${val}%`;
-            localStorage.setItem('goldminer_music_volume', val);
-        };
-
-        // Load saved volume if any
-        const savedVolume = localStorage.getItem('goldminer_music_volume') || '30';
-        updateMusicVolume(savedVolume);
-
-        if (musicVolSlider) {
-            musicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
-        }
-        if (pauseMusicVolSlider) {
-            pauseMusicVolSlider.addEventListener('input', (e) => updateMusicVolume(e.target.value));
-        }
 
         const startInput = document.getElementById('playerNameInputStart');
         if (startInput) {
@@ -393,16 +400,16 @@ const Game = {
             if (claw.grabbedItem) {
                 totalWeight = claw.grabbedItem.weight;
                 if (this.hasStrengthDrink) {
-                    speedMultiplier = 1.45; // 45% faster pull
+                    speedMultiplier = 1.5; // 50% faster pull with drink
                 }
             } else {
-                // Empty return is fast
-                speedMultiplier = 1.5; 
+                // Empty return is fast and snappy
+                speedMultiplier = 1.8; 
                 this.setMinerState('CRANKING', 50);
             }
             
-            // Reels sound effect
-            const pullSpeed = (claw.baseRetractSpeed / (1 + totalWeight)) * speedMultiplier;
+            // Retract speed calculation: snappy and responsive so it never feels frozen
+            const pullSpeed = Math.max(2.4, (claw.baseRetractSpeed / (1 + totalWeight * 0.32)) * speedMultiplier);
             AudioSynth.playReelSound(pullSpeed);
             
             // Vector calculation back to origin
@@ -417,8 +424,9 @@ const Game = {
                 claw.state = 'SWING';
                 
                 if (claw.grabbedItem) {
-                    this.collectItem(claw.grabbedItem);
+                    const itemToCollect = claw.grabbedItem;
                     claw.grabbedItem = null;
+                    this.collectItem(itemToCollect);
                 }
                 
                 this.minerState = 'IDLE';
@@ -594,10 +602,35 @@ const Game = {
         }
     },
 
+    resumeQuizImmediately() {
+        if (this.quizResumeTimeout) {
+            clearTimeout(this.quizResumeTimeout);
+            this.quizResumeTimeout = null;
+        }
+        if (this.quizTimerInterval) {
+            clearInterval(this.quizTimerInterval);
+            this.quizTimerInterval = null;
+        }
+        const continueBtn = document.getElementById('quizContinueBtn');
+        if (continueBtn) continueBtn.style.display = 'none';
+        
+        this.hideOverlay('quizOverlay');
+        this.state = 'PLAYING';
+        this.resumeTimer();
+    },
+
     triggerQuiz(item) {
         try {
             console.log("triggerQuiz called for item type:", item.type);
             
+            if (this.quizResumeTimeout) {
+                clearTimeout(this.quizResumeTimeout);
+                this.quizResumeTimeout = null;
+            }
+            
+            const continueBtn = document.getElementById('quizContinueBtn');
+            if (continueBtn) continueBtn.style.display = 'none';
+
             if (!this.questions || this.questions.length === 0) {
                 console.log("Questions list empty, loading fallback questions.");
                 this.loadFallbackQuestions();
@@ -610,15 +643,12 @@ const Game = {
             }
             
             if (!this.unusedQuestions || this.unusedQuestions.length === 0) {
-                throw new Error("No questions available even after loading fallback.");
+                this.loadFallbackQuestions();
             }
             
             // Select random question from unused questions
             const randIdx = Math.floor(Math.random() * this.unusedQuestions.length);
             const q = this.unusedQuestions[randIdx];
-            if (!q) {
-                throw new Error("Selected question is undefined.");
-            }
             this.currentQuestion = q;
             
             // Remove question from list so it doesn't repeat
@@ -708,8 +738,6 @@ const Game = {
             this.showOverlay('quizOverlay');
         } catch (error) {
             console.error("Error in triggerQuiz:", error);
-            // Non-blocking fallback: Alert the user and resume game play
-            alert("⚠️ โหลดคำถามขัดข้องชั่วคราว: " + error.message + "\n(ระบบจะดำเนินการเล่นต่ออัตโนมัติ)");
             this.hideOverlay('quizOverlay');
             this.state = 'PLAYING';
             this.resumeTimer();
@@ -720,9 +748,7 @@ const Game = {
         try {
             const q = this.currentQuestion;
             if (!q) {
-                this.hideOverlay('quizOverlay');
-                this.state = 'PLAYING';
-                this.resumeTimer();
+                this.resumeQuizImmediately();
                 return;
             }
 
@@ -745,7 +771,12 @@ const Game = {
             if (fb) {
                 fb.style.display = 'block';
                 fb.className = 'feedback-incorrect';
-                fb.innerHTML = `⏰ หมดเวลา 10 วินาที! <br><span style="font-size: 22px; color: #ffea00;">เฉลยข้อที่ถูกต้องคือ: "${q.answer}"</span> 😢`;
+                fb.innerHTML = `⏰ หมดเวลา 10 วินาที! <br><span style="font-size: 20px; color: #ffea00;">เฉลยข้อที่ถูกต้องคือ: "${q.answer}"</span> 😢`;
+            }
+
+            const continueBtn = document.getElementById('quizContinueBtn');
+            if (continueBtn) {
+                continueBtn.style.display = 'block';
             }
 
             AudioSynth.playGrabSound(); // buzzer sound
@@ -757,18 +788,14 @@ const Game = {
 
             const goldCleared = this.checkGoldCleared();
             if (!goldCleared) {
-                // Keep correct answer revealed on screen for 3 seconds before resuming
-                setTimeout(() => {
-                    this.hideOverlay('quizOverlay');
-                    this.state = 'PLAYING';
-                    this.resumeTimer();
-                }, 3000);
+                if (this.quizResumeTimeout) clearTimeout(this.quizResumeTimeout);
+                this.quizResumeTimeout = setTimeout(() => {
+                    this.resumeQuizImmediately();
+                }, 2200);
             }
         } catch (e) {
             console.error("Error in handleQuizTimeout:", e);
-            this.hideOverlay('quizOverlay');
-            this.state = 'PLAYING';
-            this.resumeTimer();
+            this.resumeQuizImmediately();
         }
     },
 
@@ -781,9 +808,7 @@ const Game = {
 
             const q = this.currentQuestion;
             if (!q) {
-                this.hideOverlay('quizOverlay');
-                this.state = 'PLAYING';
-                this.resumeTimer();
+                this.resumeQuizImmediately();
                 return;
             }
             const isCorrect = selectedOption === q.answer;
@@ -812,6 +837,11 @@ const Game = {
             const fb = document.getElementById('quizFeedbackPanel');
             if (fb) {
                 fb.style.display = 'block';
+            }
+            
+            const continueBtn = document.getElementById('quizContinueBtn');
+            if (continueBtn) {
+                continueBtn.style.display = 'block';
             }
             
             let finalVal = item.value;
@@ -882,18 +912,16 @@ const Game = {
             
             const goldCleared = this.checkGoldCleared();
             if (!goldCleared) {
-                // Wait 2.5 seconds, then transition back to gameplay
-                setTimeout(() => {
-                    this.hideOverlay('quizOverlay');
-                    this.state = 'PLAYING';
-                    this.resumeTimer();
-                }, 2500);
+                // Auto resume after brief readable delay (1.2s for correct, 2.0s for incorrect)
+                const delay = isCorrect ? 1200 : 2000;
+                if (this.quizResumeTimeout) clearTimeout(this.quizResumeTimeout);
+                this.quizResumeTimeout = setTimeout(() => {
+                    this.resumeQuizImmediately();
+                }, delay);
             }
         } catch (e) {
             console.error("Error in submitQuizAnswer:", e);
-            this.hideOverlay('quizOverlay');
-            this.state = 'PLAYING';
-            this.resumeTimer();
+            this.resumeQuizImmediately();
         }
     },
 
@@ -1020,6 +1048,9 @@ const Game = {
     // --- GAME STATE TRANSITIONS ---
     startGame() {
         AudioSynth.init();
+        if (typeof AudioSynth !== 'undefined') {
+            AudioSynth.startMusic();
+        }
         
         // Ensure name is saved immediately when starting
         const startInput = document.getElementById('playerNameInputStart');
@@ -1030,8 +1061,7 @@ const Game = {
             }
         }
         
-        this.hideAllOverlays();
-        this.showOverlay('checkpointOverlay');
+        this.startFromLevel(1);
     },
 
     startFromLevel(lvl) {
@@ -2011,75 +2041,142 @@ const Game = {
         // Calculate exact angle of rope for synchronized rotation
         const ropeAngle = Math.atan2(cx - ox, cy - oy);
         
-        // 1. Draw Rope
-        ctx.strokeStyle = '#723d10';
-        ctx.lineWidth = 3.0;
+        // 1. Draw Cable/Chain
+        ctx.strokeStyle = '#555e68';
+        ctx.lineWidth = 3.5;
         ctx.beginPath();
         ctx.moveTo(ox, oy);
         ctx.lineTo(cx, cy);
         ctx.stroke();
         
-        // Rope highlight coils (set dashes to look braided)
-        ctx.strokeStyle = '#462406';
-        ctx.lineWidth = 3.0;
-        ctx.setLineDash([4, 8]);
+        // Cable highlight (metallic shine)
+        ctx.strokeStyle = '#8a939e';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 6]);
         ctx.beginPath();
         ctx.moveTo(ox, oy);
         ctx.lineTo(cx, cy);
         ctx.stroke();
         ctx.setLineDash([]); // Reset
         
-        // 2. Draw Metal Hook head
+        // 2. Draw Mining Drill head
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(ropeAngle);
         
-        // Dark steel connector
-        ctx.fillStyle = '#495057';
-        ctx.strokeStyle = '#212529';
-        ctx.lineWidth = 2.5;
+        const isDrilling = this.claw.state === 'SHOOT';
+        const isHolding = this.claw.state === 'RETRACT' && this.claw.grabbedItem;
+        const drillTime = Date.now() / 1000;
         
+        // --- Drill Motor Housing (top block) ---
+        // Main housing body
+        const motorGrad = ctx.createLinearGradient(-10, -12, 10, -12);
+        motorGrad.addColorStop(0, '#5a6270');
+        motorGrad.addColorStop(0.3, '#8a939e');
+        motorGrad.addColorStop(0.5, '#adb5bd');
+        motorGrad.addColorStop(0.7, '#8a939e');
+        motorGrad.addColorStop(1, '#5a6270');
+        ctx.fillStyle = motorGrad;
+        ctx.strokeStyle = '#343a40';
+        ctx.lineWidth = 2;
+        
+        // Rounded motor block
         ctx.beginPath();
-        ctx.arc(0, -6, 7, Math.PI, 0);
-        ctx.rect(-7, -6, 14, 7);
+        ctx.moveTo(-9, -10);
+        ctx.lineTo(-9, 4);
+        ctx.lineTo(9, 4);
+        ctx.lineTo(9, -10);
+        ctx.arc(0, -10, 9, 0, Math.PI, true);
         ctx.fill();
         ctx.stroke();
         
-        // Determine pincer spread based on claw actions
-        let spread = 0.5; // SWING (slightly open)
-        if (this.claw.state === 'SHOOT') {
-            spread = 0.95; // SHOOT (open wide)
-        } else if (this.claw.state === 'RETRACT') {
-            spread = this.claw.grabbedItem ? 0.15 : 0.4; // RETRACT (closed tight if holding)
+        // Motor housing accent lines
+        ctx.strokeStyle = '#495057';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-6, -4);
+        ctx.lineTo(6, -4);
+        ctx.moveTo(-6, 0);
+        ctx.lineTo(6, 0);
+        ctx.stroke();
+        
+        // Warning stripe band (yellow/black)
+        ctx.fillStyle = '#ffb703';
+        ctx.fillRect(-9, 2, 18, 4);
+        ctx.fillStyle = '#212529';
+        ctx.fillRect(-9, 2, 4, 4);
+        ctx.fillRect(-1, 2, 4, 4);
+        ctx.fillRect(7, 2, 4, 4);
+        
+        // --- Drill Bit (spiral cone) ---
+        const drillLength = 22;
+        const drillTopWidth = 7;
+        
+        // Drill bit metallic body
+        const bitGrad = ctx.createLinearGradient(-drillTopWidth, 6, drillTopWidth, 6);
+        bitGrad.addColorStop(0, '#868e96');
+        bitGrad.addColorStop(0.2, '#ced4da');
+        bitGrad.addColorStop(0.5, '#e9ecef');
+        bitGrad.addColorStop(0.8, '#ced4da');
+        bitGrad.addColorStop(1, '#868e96');
+        
+        ctx.fillStyle = bitGrad;
+        ctx.strokeStyle = '#495057';
+        ctx.lineWidth = 1.5;
+        
+        // Tapered drill cone shape
+        ctx.beginPath();
+        ctx.moveTo(-drillTopWidth, 6);
+        ctx.lineTo(-1, 6 + drillLength);
+        ctx.lineTo(0, 6 + drillLength + 3); // Sharp tip
+        ctx.lineTo(1, 6 + drillLength);
+        ctx.lineTo(drillTopWidth, 6);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        
+        // Spiral grooves on drill bit (animated when drilling)
+        ctx.strokeStyle = '#495057';
+        ctx.lineWidth = 1.2;
+        const spiralOffset = isDrilling ? (drillTime * 8) % 6 : 0;
+        for (let i = 0; i < 5; i++) {
+            const yPos = 8 + i * 4.5 + spiralOffset;
+            if (yPos > 6 + drillLength) continue;
+            const progress = (yPos - 6) / drillLength;
+            const halfW = drillTopWidth * (1 - progress * 0.85);
+            ctx.beginPath();
+            ctx.moveTo(-halfW, yPos);
+            ctx.quadraticCurveTo(0, yPos + 2, halfW, yPos);
+            ctx.stroke();
         }
         
-        // Pincer lines
-        ctx.strokeStyle = '#adb5bd';
-        ctx.lineWidth = 4.0;
-        ctx.lineCap = 'round';
+        // Glowing drill tip when actively drilling
+        if (isDrilling) {
+            const glowIntensity = 0.4 + 0.3 * Math.sin(drillTime * 12);
+            ctx.shadowColor = '#ff6600';
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = `rgba(255, 140, 0, ${glowIntensity})`;
+            ctx.beginPath();
+            ctx.arc(0, 6 + drillLength + 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
         
-        // Left Pincer hook
-        ctx.beginPath();
-        ctx.moveTo(-5, 0);
-        // Bezier curving out and curving hook back inwards
-        ctx.bezierCurveTo(
-            -18 * Math.sin(spread), 12 * Math.cos(spread),
-            -16 * Math.sin(spread), 24 * Math.cos(spread),
-            -10, 24
-        );
-        ctx.bezierCurveTo(-5, 18, -2, 10, -2, 5);
-        ctx.stroke();
-        
-        // Right Pincer hook
-        ctx.beginPath();
-        ctx.moveTo(5, 0);
-        ctx.bezierCurveTo(
-            18 * Math.sin(spread), 12 * Math.cos(spread),
-            16 * Math.sin(spread), 24 * Math.cos(spread),
-            10, 24
-        );
-        ctx.bezierCurveTo(5, 18, 2, 10, 2, 5);
-        ctx.stroke();
+        // Spark particles when holding item (retracting with gold)
+        if (isHolding) {
+            ctx.fillStyle = '#ffea00';
+            for (let s = 0; s < 3; s++) {
+                const sparkAngle = drillTime * 6 + s * 2.1;
+                const sparkDist = 6 + Math.sin(sparkAngle * 3) * 3;
+                const sx = Math.cos(sparkAngle) * sparkDist;
+                const sy = 6 + drillLength + Math.sin(sparkAngle) * 4;
+                ctx.globalAlpha = 0.5 + 0.5 * Math.sin(sparkAngle * 2);
+                ctx.beginPath();
+                ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+        }
         
         ctx.restore();
     }
