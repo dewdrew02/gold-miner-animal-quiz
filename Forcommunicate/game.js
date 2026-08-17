@@ -1283,6 +1283,17 @@ const Game = {
             this.highScores = [];
             this.saveHighScoresToStorage();
         }
+
+        // Asynchronously fetch leaderboard from Supabase
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.fetchLeaderboard) {
+            SupabaseDB.fetchLeaderboard(5).then(cloudScores => {
+                if (cloudScores && cloudScores.length > 0) {
+                    this.highScores = cloudScores;
+                    this.saveHighScoresToStorage();
+                    this.renderMenuHighScores();
+                }
+            }).catch(e => console.warn("Supabase fetch leaderboard error", e));
+        }
     },
 
     saveHighScoresToStorage() {
@@ -1339,6 +1350,11 @@ const Game = {
 
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
+
+        // Save to Supabase Cloud Database & Storage
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.savePlayerRecord) {
+            SupabaseDB.savePlayerRecord(record.name, record.score, record.level, record.photo);
+        }
     },
 
     saveCurrentScore() {
@@ -1369,6 +1385,11 @@ const Game = {
 
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
+
+        // Save to Supabase Cloud Database & Storage
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.savePlayerRecord) {
+            SupabaseDB.savePlayerRecord(record.name, record.score, record.level, record.photo);
+        }
 
         // Disable input and show saved status
         nameInput.disabled = true;

@@ -48,6 +48,18 @@ const TimeStampManager = {
         this.logs.push(record);
         this.saveLogsToStorage();
         console.log("⏱️ [TimeStamp Logged]:", record);
+
+        // Sync with Supabase Database
+        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.logQuizAttempt) {
+            SupabaseDB.logQuizAttempt(
+                questionText,
+                selectedAnswer,
+                correctAnswer,
+                isCorrect,
+                timeSpentSeconds
+            );
+        }
+
         return record;
     },
 
