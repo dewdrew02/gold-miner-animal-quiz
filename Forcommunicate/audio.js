@@ -309,36 +309,42 @@ const AudioSynth = {
 
     bgmAudio: null,
     isMusicPlaying: false,
-    musicVolume: 0.3,
+    musicRequested: false,
+    musicVolume: 0.35,
 
     startMusic() {
         try {
             this.init();
-            if (this.isMusicPlaying) return;
+            this.musicRequested = true;
 
             if (!this.bgmAudio) {
                 this.bgmAudio = new Audio('Song.mp3');
                 this.bgmAudio.loop = true;
+                this.bgmAudio.preload = 'auto';
             }
 
             this.bgmAudio.volume = this.musicVolume;
             
-            this.bgmAudio.play()
-                .then(() => {
-                    this.isMusicPlaying = true;
-                })
-                .catch(err => {
-                    console.warn("Failed to play background music:", err);
-                });
+            const playPromise = this.bgmAudio.play();
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        this.isMusicPlaying = true;
+                    })
+                    .catch(err => {
+                        console.warn("Autoplay policy waiting for user interaction:", err);
+                        this.isMusicPlaying = false;
+                    });
+            }
         } catch (e) {
-            console.warn("HTML5 Audio is not supported or failed to play BGM:", e);
+            console.warn("HTML5 Audio failed to play BGM:", e);
         }
     },
 
     setMusicVolume(vol) {
-        this.musicVolume = vol;
+        this.musicVolume = Math.max(0, Math.min(1, vol));
         if (this.bgmAudio) {
-            this.bgmAudio.volume = vol;
+            this.bgmAudio.volume = this.musicVolume;
         }
     },
 
@@ -347,5 +353,22 @@ const AudioSynth = {
             this.bgmAudio.pause();
         }
         this.isMusicPlaying = false;
+        this.musicRequested = false;
     }
 };
+
+// Global Audio Unlock Listener for Mobile & Desktop Browsers
+(function setupAudioUnlock() {
+    const unlock = () => {
+        if (typeof AudioSynth !== 'undefined') {
+            AudioSynth.init();
+            if (AudioSynth.musicRequested && !AudioSynth.isMusicPlaying) {
+                AudioSynth.startMusic();
+            }
+        }
+    };
+    ['click', 'touchstart', 'touchend', 'keydown', 'mousedown', 'pointerdown'].forEach(event => {
+        window.addEventListener(event, unlock, { passive: true, once: false });
+    });
+})();
+

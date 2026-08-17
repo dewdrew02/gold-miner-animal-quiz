@@ -4,7 +4,7 @@
 const TimeStampManager = {
     // Default time limit for answering each quiz question (in seconds)
     quizTimeLimit: 10,
-    
+
     // Array to store all quiz attempt logs
     logs: [],
 
@@ -44,22 +44,10 @@ const TimeStampManager = {
             timeSpentSeconds: parseFloat(timeSpentSeconds.toFixed(2)),
             status: isCorrect ? 'CORRECT' : (selectedAnswer ? 'INCORRECT' : 'TIMEOUT')
         };
-        
+
         this.logs.push(record);
         this.saveLogsToStorage();
         console.log("⏱️ [TimeStamp Logged]:", record);
-
-        // Sync with Supabase Database
-        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.logQuizAttempt) {
-            SupabaseDB.logQuizAttempt(
-                questionText,
-                selectedAnswer,
-                correctAnswer,
-                isCorrect,
-                timeSpentSeconds
-            );
-        }
-
         return record;
     },
 

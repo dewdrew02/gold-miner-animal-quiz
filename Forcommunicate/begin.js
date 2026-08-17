@@ -217,12 +217,15 @@ const BeginScreen = {
         if (overlay) {
             overlay.classList.add('begin-fade-out');
 
-            // Play sound effect if available
-            if (typeof AudioSynth !== 'undefined' && AudioSynth.playUpgrade) {
+            // Unlock and start Audio on first user interaction
+            if (typeof AudioSynth !== 'undefined') {
                 try {
                     AudioSynth.init();
-                    AudioSynth.playUpgrade();
-                } catch(e) {}
+                    if (AudioSynth.playUpgrade) AudioSynth.playUpgrade();
+                    AudioSynth.startMusic();
+                } catch(e) {
+                    console.warn("Audio start on entry:", e);
+                }
             }
 
             setTimeout(() => {

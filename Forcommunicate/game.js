@@ -404,10 +404,10 @@ const Game = {
                 }
             } else {
                 // Empty return speed
-                speedMultiplier = 1.4; 
+                speedMultiplier = 1.4;
                 this.setMinerState('CRANKING', 50);
             }
-            
+
             // Retract speed calculation: noticeably slower and heavy when pulling
             const pullSpeed = Math.max(0.7, (claw.baseRetractSpeed / (1 + totalWeight * 0.42)) * speedMultiplier);
             AudioSynth.playReelSound(pullSpeed);
@@ -1066,6 +1066,9 @@ const Game = {
 
     startFromLevel(lvl) {
         AudioSynth.init();
+        if (typeof AudioSynth !== 'undefined') {
+            AudioSynth.startMusic();
+        }
 
         this.cash = 0;
         this.level = lvl;
@@ -1283,17 +1286,6 @@ const Game = {
             this.highScores = [];
             this.saveHighScoresToStorage();
         }
-
-        // Asynchronously fetch leaderboard from Supabase
-        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.fetchLeaderboard) {
-            SupabaseDB.fetchLeaderboard(5).then(cloudScores => {
-                if (cloudScores && cloudScores.length > 0) {
-                    this.highScores = cloudScores;
-                    this.saveHighScoresToStorage();
-                    this.renderMenuHighScores();
-                }
-            }).catch(e => console.warn("Supabase fetch leaderboard error", e));
-        }
     },
 
     saveHighScoresToStorage() {
@@ -1350,11 +1342,6 @@ const Game = {
 
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
-
-        // Save to Supabase Cloud Database & Storage
-        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.savePlayerRecord) {
-            SupabaseDB.savePlayerRecord(record.name, record.score, record.level, record.photo);
-        }
     },
 
     saveCurrentScore() {
@@ -1385,11 +1372,6 @@ const Game = {
 
         this.saveHighScoresToStorage();
         this.renderMenuHighScores();
-
-        // Save to Supabase Cloud Database & Storage
-        if (typeof SupabaseDB !== 'undefined' && SupabaseDB.savePlayerRecord) {
-            SupabaseDB.savePlayerRecord(record.name, record.score, record.level, record.photo);
-        }
 
         // Disable input and show saved status
         nameInput.disabled = true;
